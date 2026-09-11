@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projetos, voluntariado e doações — Instituto Raízes</title>
+<meta name="description" content="Conheça as frentes de atuação do Instituto Raízes, como se tornar voluntário e como funcionam nossas campanhas de doação.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest-950: #142118;
+    --forest-700: #24402D;
+    --moss-500: #5C8256;
+    --sand-100: #F2EBDA;
+    --sand-050: #FAF6EC;
+    --gold-600: #B98A2E;
+    --ink-900: #1C1B17;
+    --line: rgba(28, 27, 23, 0.14);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--sand-100);
+    color: var(--ink-900);
+    font-family: "Work Sans", sans-serif;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0 0 0.5em;
+  }
+  h1 { font-size: clamp(2rem, 4.5vw, 3rem); }
+  h2 { font-size: clamp(1.5rem, 3vw, 2rem); margin-top: 0; }
+  h3 { font-size: 1.2rem; margin-top: 1.6em; }
+  h4 { font-size: 1.05rem; }
+
+  p { max-width: 65ch; }
+  img { max-width: 100%; height: auto; display: block; border-radius: 6px; }
+
+  a { color: var(--forest-700); }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 3px solid var(--gold-600);
+    outline-offset: 2px;
+  }
+
+  .skip-link {
+    position: absolute; left: -999px; top: 0;
+    background: var(--gold-600); color: #fff;
+    padding: 0.6em 1em; z-index: 100;
+  }
+  .skip-link:focus { left: 0.5em; top: 0.5em; }
+
+  header { background: var(--forest-950); color: var(--sand-050); }
+  .header-inner {
+    max-width: 1100px; margin: 0 auto; padding: 1.1em 1.5em;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 1em; flex-wrap: wrap;
+  }
+  .brand { font-family: "Fraunces", serif; font-size: 1.3rem; margin: 0; }
+  .brand span { color: var(--gold-600); }
+  nav ul { list-style: none; display: flex; gap: 1.6em; margin: 0; padding: 0; }
+  header nav a { color: var(--sand-050); text-decoration: none; font-weight: 500; }
+  header nav a:hover { color: var(--gold-600); }
+  header nav a[aria-current="page"] { color: var(--gold-600); border-bottom: 2px solid var(--gold-600); }
+
+  section { max-width: 1100px; margin: 0 auto; padding: 3.5em 1.5em; }
+
+  .hero-projetos p { color: var(--forest-700); }
+
+  #frentes { background: var(--sand-050); }
+  .frentes-grade {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2em;
+    margin-top: 1.5em;
+  }
+  .frentes-grade article img { margin-bottom: 0.8em; }
+
+  .vagas-grade, .doacoes-grade {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5em;
+    margin-top: 1em;
+  }
+  .vagas-grade article, .doacoes-grade article {
+    background: var(--sand-050);
+    border-top: 3px solid var(--gold-600);
+    padding: 1.2em 1.4em;
+    border-radius: 4px;
+  }
+  #doacoes .doacoes-grade article { background: #fff; }
+
+  dl { margin: 0.8em 0 0; }
+  dt { font-weight: 600; font-size: 0.9rem; color: var(--forest-700); margin-top: 0.6em; }
+  dd { margin: 0.1em 0 0; }
+
+  ol.passos {
+    padding-left: 1.3em;
+    margin-top: 1em;
+  }
+  ol.passos li { margin-bottom: 0.6em; max-width: 60ch; }
+
+  details {
+    border-bottom: 1px solid var(--line);
+    padding: 0.9em 0;
+  }
+  details summary {
+    cursor: pointer;
+    font-weight: 500;
+    font-family: "Fraunces", serif;
+  }
+  details p { margin: 0.7em 0 0; color: var(--forest-700); }
+
+  #doacoes { background: var(--sand-050); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1em;
+    background: #fff;
+  }
+  caption { text-align: left; font-weight: 500; margin-bottom: 0.6em; color: var(--forest-700); }
+  th, td { text-align: left; padding: 0.7em 0.9em; border-bottom: 1px solid var(--line); }
+  th { font-family: "Fraunces", serif; font-weight: 600; }
+
+  .botao {
+    display: inline-block;
+    margin-top: 1.5em;
+    padding: 0.75em 1.5em;
+    background: var(--forest-700);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .botao:hover { background: var(--forest-950); }
+
+  footer { background: var(--forest-950); color: var(--sand-050); }
+  .footer-inner {
+    max-width: 1100px; margin: 0 auto; padding: 2em 1.5em;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1em;
+  }
+  footer a { color: var(--sand-050); }
+  footer nav ul { list-style: none; display: flex; gap: 1.4em; margin: 0; padding: 0; }
+
+  @media (max-width: 760px) {
+    .frentes-grade, .vagas-grade, .doacoes-grade { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#conteudo-principal">Pular para o conteúdo principal</a>
+
+<header>
+  <div class="header-inner">
+    <p class="brand">Instituto <span>Raízes</span></p>
+    <nav aria-label="Navegação principal">
+      <ul>
+        <li><a href="index.html">Início</a></li>
+        <li><a href="projetos.html" aria-current="page">Projetos</a></li>
+        <li><a href="cadastro.html">Cadastro</a></li>
+        <li><a href="index.html#contato">Contato</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="conteudo-principal">
+
+  <section class="hero-projetos" aria-labelledby="hero-titulo">
+    <h1 id="hero-titulo">Nossas frentes de atuação</h1>
+    <p>Conheça onde investimos nosso trabalho, como você pode se tornar voluntário e de que forma cada doação sustenta esses projetos.</p>
+  </section>
+
+  <section id="frentes" aria-labelledby="frentes-titulo">
+    <h2 id="frentes-titulo">Onde atuamos</h2>
+    <div class="frentes-grade">
+      <article>
+        <img src="https://picsum.photos/seed/raizes-mudas/400/280" alt="Fileiras de mudas nativas em viveiro comunitário" width="400" height="280" loading="lazy">
+        <h3>Reflorestamento</h3>
+        <p>Plantio de espécies nativas em áreas degradadas da Mata Atlântica, com acompanhamento técnico por três anos após o plantio.</p>
+      </article>
+      <article>
+        <img src="https://picsum.photos/seed/raizes-educacao/400/280" alt="Crianças participando de oficina de educação ambiental ao ar livre" width="400" height="280" loading="lazy">
+        <h3>Educação ambiental</h3>
+        <p>Oficinas em escolas públicas sobre solo, água e biodiversidade, formando agentes ambientais mirins.</p>
+      </article>
+      <article>
+        <img src="https://picsum.photos/seed/raizes-agua/400/280" alt="Nascente de rio protegida por vegetação nativa recém-plantada" width="400" height="280" loading="lazy">
+        <h3>Recuperação de microbacias</h3>
+        <p>Proteção de nascentes e matas ciliares para garantir água de qualidade às comunidades vizinhas.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="voluntariado" aria-labelledby="voluntariado-titulo">
+    <h2 id="voluntariado-titulo">Como ser voluntário</h2>
+    <p>Não é preciso experiência prévia — cada frente tem uma trilha de formação própria antes do primeiro mutirão.</p>
+
+    <h3>Frentes de voluntariado</h3>
+    <div class="vagas-grade">
+      <article>
+        <h4>Mutirão de plantio</h4>
+        <p>Apoio direto no plantio e manutenção das mudas.</p>
+        <dl>
+          <dt>Dedicação</dt>
+          <dd>Sábados pela manhã, quinzenal</dd>
+          <dt>Pré-requisitos</dt>
+          <dd>Nenhum</dd>
+        </dl>
+      </article>
+      <article>
+        <h4>Educador ambiental</h4>
+        <p>Conduz oficinas nas escolas parceiras.</p>
+        <dl>
+          <dt>Dedicação</dt>
+          <dd>4h semanais, em horário escolar</dd>
+          <dt>Pré-requisitos</dt>
+          <dd>Formação em licenciatura ou pedagogia</dd>
+        </dl>
+      </article>
+      <article>
+        <h4>Apoio administrativo</h4>
+        <p>Organização de doações, comunicação e captação de recursos.</p>
+        <dl>
+          <dt>Dedicação</dt>
+          <dd>Remoto, carga horária flexível</dd>
+          <dt>Pré-requisitos</dt>
+          <dd>Nenhum</dd>
+        </dl>
+      </article>
+    </div>
+
+    <h3>Como se inscrever</h3>
+    <ol class="passos">
+      <li>Preencha o formulário de interesse na página de contato.</li>
+      <li>Participe de uma roda de acolhimento (online, 40 minutos).</li>
+      <li>Escolha a frente de atuação que combina com sua disponibilidade.</li>
+      <li>Participe do seu primeiro mutirão como experimentação.</li>
+    </ol>
+
+    <h3>Perguntas frequentes</h3>
+    <details>
+      <summary>Preciso de experiência prévia?</summary>
+      <p>Não. Toda formação necessária é oferecida antes do primeiro mutirão.</p>
+    </details>
+    <details>
+      <summary>Qual a idade mínima para participar?</summary>
+      <p>16 anos, acompanhado de responsável até os 18.</p>
+    </details>
+    <details>
+      <summary>Posso participar apenas uma vez?</summary>
+      <p>Sim, mutirões pontuais são bem-vindos, embora a formação de vínculo ajude o projeto a planejar melhor as atividades.</p>
+    </details>
+  </section>
+
+  <section id="doacoes" aria-labelledby="doacoes-titulo">
+    <h2 id="doacoes-titulo">Como funcionam as doações</h2>
+    <p>Publicamos balanço financeiro trimestral e cada doação recorrente recebe um relatório anual de impacto por e-mail.</p>
+
+    <h3>Formas de doação</h3>
+    <div class="doacoes-grade">
+      <article>
+        <h4>Doação única</h4>
+        <p>Contribuição pontual via Pix, cartão ou boleto, sem compromisso de recorrência.</p>
+      </article>
+      <article>
+        <h4>Doação recorrente</h4>
+        <p>Valor mensal fixo, cancelável a qualquer momento, que sustenta o custeio contínuo dos viveiros.</p>
+      </article>
+      <article>
+        <h4>Doação de insumos</h4>
+        <p>Doação de mudas, ferramentas ou material didático diretamente às equipes de campo.</p>
+      </article>
+    </div>
+
+    <h3>Para onde vai cada real</h3>
+    <table>
+      <caption>Destinação média dos recursos arrecadados em 2025</caption>
+      <thead>
+        <tr>
+          <th scope="col">Categoria</th>
+          <th scope="col">Percentual</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Mudas e insumos de plantio</td><td>52%</td></tr>
+        <tr><td>Educação ambiental nas escolas</td><td>26%</td></tr>
+        <tr><td>Manutenção da equipe técnica</td><td>16%</td></tr>
+        <tr><td>Administração e transparência</td><td>6%</td></tr>
+      </tbody>
+    </table>
+
+    <a class="botao" href="index.html#contato">Quero doar agora</a>
+  </section>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <p>&copy; 2026 Instituto Raízes. Todos os direitos reservados.</p>
+    <nav aria-label="Links secundários do rodapé">
+      <ul>
+        <li><a href="index.html#sobre">Sobre</a></li>
+        <li><a href="index.html#contato">Contato</a></li>
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instituto Raízes — Reflorestamento e educação ambiental</title>
+<meta name="description" content="Instituto Raízes: ONG de reflorestamento e educação ambiental em São Paulo. Conheça nosso trabalho e fale com a gente.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest-950: #142118;
+    --forest-700: #24402D;
+    --moss-500: #5C8256;
+    --sand-100: #F2EBDA;
+    --sand-050: #FAF6EC;
+    --gold-600: #B98A2E;
+    --ink-900: #1C1B17;
+    --line: rgba(28, 27, 23, 0.14);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--sand-100);
+    color: var(--ink-900);
+    font-family: "Work Sans", sans-serif;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3 {
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    line-height: 1.15;
+    margin: 0 0 0.6em;
+  }
+
+  h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); }
+  h2 { font-size: clamp(1.6rem, 3.2vw, 2.2rem); }
+  h3 { font-size: 1.05rem; }
+
+  p { max-width: 62ch; }
+
+  img { max-width: 100%; height: auto; display: block; border-radius: 6px; }
+
+  a { color: var(--forest-700); }
+  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 3px solid var(--gold-600);
+    outline-offset: 2px;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: -999px;
+    top: 0;
+    background: var(--gold-600);
+    color: #fff;
+    padding: 0.6em 1em;
+    z-index: 100;
+  }
+  .skip-link:focus { left: 0.5em; top: 0.5em; }
+
+  header {
+    background: var(--forest-950);
+    color: var(--sand-050);
+  }
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.1em 1.5em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1em;
+    flex-wrap: wrap;
+  }
+  .brand { font-family: "Fraunces", serif; font-size: 1.3rem; margin: 0; }
+  .brand span { color: var(--gold-600); }
+
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 1.6em;
+    margin: 0;
+    padding: 0;
+  }
+  header nav a {
+    color: var(--sand-050);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  header nav a:hover { color: var(--gold-600); }
+
+  section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 4em 1.5em;
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 2.5em;
+    align-items: center;
+  }
+  .hero p { color: var(--forest-700); }
+  .botao {
+    display: inline-block;
+    margin-top: 1.2em;
+    padding: 0.75em 1.5em;
+    background: var(--forest-700);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .botao:hover { background: var(--forest-950); }
+
+  .sobre-grade {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 2.5em;
+    align-items: center;
+  }
+
+  #atuacao { background: var(--sand-050); }
+  .numeros {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5em;
+    margin-top: 1.5em;
+  }
+  .numeros article {
+    border-top: 3px solid var(--gold-600);
+    padding-top: 0.8em;
+  }
+  .numero {
+    font-family: "Fraunces", serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--forest-950);
+    margin: 0;
+  }
+
+  .contato-grade {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3em;
+    margin-top: 1.5em;
+  }
+  address { font-style: normal; }
+  address p { margin: 0 0 1.3em; }
+  address strong { display: block; margin-bottom: 0.2em; font-family: "Fraunces", serif; }
+
+  form { display: grid; gap: 1em; }
+  label { font-weight: 500; display: block; margin-bottom: 0.3em; }
+  input, textarea {
+    width: 100%;
+    padding: 0.6em 0.7em;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 1rem;
+  }
+
+  footer {
+    background: var(--forest-950);
+    color: var(--sand-050);
+  }
+  .footer-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2em 1.5em;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1em;
+  }
+  footer a { color: var(--sand-050); }
+  footer nav ul { list-style: none; display: flex; gap: 1.4em; margin: 0; padding: 0; }
+
+  @media (max-width: 760px) {
+    .hero, .sobre-grade, .contato-grade { grid-template-columns: 1fr; }
+    .numeros { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#conteudo-principal">Pular para o conteúdo principal</a>
+
+<header>
+  <div class="header-inner">
+    <p class="brand">Instituto <span>Raízes</span></p>
+    <nav aria-label="Navegação principal">
+      <ul>
+        <li><a href="#sobre">Sobre</a></li>
+        <li><a href="#atuacao">Atuação</a></li>
+        <li><a href="projetos.html">Projetos</a></li>
+        <li><a href="cadastro.html">Cadastro</a></li>
+        <li><a href="#contato">Contato</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="conteudo-principal">
+
+  <section class="hero" aria-labelledby="hero-titulo">
+    <div class="hero-texto">
+      <h1 id="hero-titulo">Recuperar a terra, uma muda de cada vez</h1>
+      <p>Desde 2011, plantamos florestas nativas e formamos comunidades para cuidar da própria água, do próprio solo e do próprio futuro.</p>
+      <a class="botao" href="#contato">Fale com a gente</a>
+    </div>
+    <img
+      src="https://picsum.photos/seed/raizes-plantio/800/600"
+      alt="Voluntários plantando mudas de árvores nativas em uma encosta reflorestada"
+      width="800" height="600" loading="eager">
+  </section>
+
+  <section id="sobre" aria-labelledby="sobre-titulo">
+    <h2 id="sobre-titulo">Quem somos</h2>
+    <div class="sobre-grade">
+      <img
+        src="https://picsum.photos/seed/raizes-equipe/700/560"
+        alt="Equipe do Instituto Raízes reunida em roda durante oficina de educação ambiental"
+        width="700" height="560" loading="lazy">
+      <div class="sobre-texto">
+        <p>O Instituto Raízes é uma organização sem fins lucrativos que atua na Mata Atlântica paulista, recuperando áreas degradadas por meio de plantio de espécies nativas e formação de agentes ambientais comunitários.</p>
+        <p>Hoje somos uma rede de mais de 40 voluntários fixos e parcerias com 12 escolas públicas da região metropolitana de São Paulo.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="atuacao" aria-labelledby="atuacao-titulo">
+    <h2 id="atuacao-titulo">Como atuamos</h2>
+    <p>Três frentes de trabalho sustentam o que fazemos todos os dias.</p>
+    <div class="numeros">
+      <article>
+        <p class="numero">18.400</p>
+        <h3>Mudas nativas plantadas</h3>
+      </article>
+      <article>
+        <p class="numero">12</p>
+        <h3>Escolas parceiras em educação ambiental</h3>
+      </article>
+      <article>
+        <p class="numero">6</p>
+        <h3>Microbacias em recuperação</h3>
+      </article>
+    </div>
+  </section>
+
+  <section id="contato" aria-labelledby="contato-titulo">
+    <h2 id="contato-titulo">Fale com o Instituto Raízes</h2>
+    <div class="contato-grade">
+      <address>
+        <p>
+          <strong>Endereço</strong>
+          Rua das Sementes, 245 — Vila Madalena<br>
+          São Paulo — SP, 05433-000
+        </p>
+        <p>
+          <strong>Telefone</strong>
+          <a href="tel:+551130405060">(11) 3040-5060</a>
+        </p>
+        <p>
+          <strong>E-mail</strong>
+          <a href="mailto:contato@institutoraizes.org.br">contato@institutoraizes.org.br</a>
+        </p>
+        <p>
+          <strong>Redes sociais</strong>
+          <a href="https://instagram.com/institutoraizes">Instagram</a> ·
+          <a href="https://facebook.com/institutoraizes">Facebook</a>
+        </p>
+      </address>
+
+      <form aria-label="Formulário de contato">
+        <div>
+          <label for="nome">Nome</label>
+          <input type="text" id="nome" name="nome" required>
+        </div>
+        <div>
+          <label for="email">E-mail</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        <div>
+          <label for="mensagem">Mensagem</label>
+          <textarea id="mensagem" name="mensagem" rows="4" required></textarea>
+        </div>
+        <button type="submit" class="botao">Enviar mensagem</button>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <p>&copy; 2026 Instituto Raízes. Todos os direitos reservados.</p>
+    <nav aria-label="Links secundários do rodapé">
+      <ul>
+        <li><a href="#sobre">Sobre</a></li>
+        <li><a href="#contato">Contato</a></li>
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
