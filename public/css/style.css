@@ -1,8 +1,8 @@
 /* ==========================================================================
    DESIGN SYSTEM — Instituto Raízes
-   Arquivo único de estilos, compartilhado por index.html, projetos.html
-   e cadastro.html. Organizado em: 1) tokens, 2) reset, 3) tipografia,
-   4) layout, 5) componentes, 6) responsividade.
+   Compartilhado por index.html, projetos.html e cadastro.html.
+   Organização: 1) tokens, 2) reset, 3) tipografia, 4) layout,
+   5) grid macro de 12 colunas + componentes, 6) breakpoints responsivos.
    ========================================================================== */
 
 /* --------------------------------------------------------------------
@@ -11,56 +11,72 @@
 :root {
 
   /* Cores primárias — identidade institucional (verde floresta) */
-  --color-primary-900: #142118; /* fundo de header/footer, texto de maior contraste */
-  --color-primary-700: #24402D; /* links, botões, texto de apoio */
-  --color-primary-500: #5C8256; /* acentos discretos, ícones */
+  --color-primary-900: #142118;
+  --color-primary-700: #24402D;
+  --color-primary-500: #5C8256;
 
   /* Cores secundárias — ação, destaque, foco */
-  --color-secondary-600: #B98A2E; /* CTA, hover, foco, item ativo do menu */
-  --color-secondary-300: #E7C583; /* variação clara do dourado, uso pontual */
+  --color-secondary-600: #B98A2E;
+  --color-secondary-300: #E7C583;
 
   /* Cores semânticas — feedback do sistema */
-  --color-danger-600: #A23B2E;  /* estados inválidos (ex.: pattern/required não atendidos) */
-  --color-success-600: #3F7A4E; /* confirmações, ex.: envio de formulário concluído */
+  --color-danger-600: #A23B2E;
+  --color-success-600: #3F7A4E;
 
   /* Cores neutras — texto, fundo, superfícies, bordas */
-  --color-neutral-000: #FFFFFF;               /* superfície de inputs e cards claros */
-  --color-neutral-050: #FAF6EC;               /* fundo de seções alternadas */
-  --color-neutral-100: #F2EBDA;               /* fundo geral da página */
-  --color-neutral-900: #1C1B17;               /* texto principal */
-  --color-line: rgba(28, 27, 23, 0.16);       /* bordas e divisores discretos */
+  --color-neutral-000: #FFFFFF;
+  --color-neutral-050: #FAF6EC;
+  --color-neutral-100: #F2EBDA;
+  --color-neutral-900: #1C1B17;
+  --color-line: rgba(28, 27, 23, 0.16);
 
   /* Tipografia — famílias */
-  --font-display: "Fraunces", serif;   /* títulos e destaques */
-  --font-body: "Work Sans", sans-serif; /* texto corrido e formulários */
+  --font-display: "Fraunces", serif;
+  --font-body: "Work Sans", sans-serif;
 
   /* Tipografia — escala hierárquica (6 patamares) */
-  --text-display: clamp(2.25rem, 1.4rem + 3vw, 3.5rem); /* h1 / hero */
+  --text-display: clamp(2.25rem, 1.4rem + 3vw, 3.5rem);
   --text-h2:      clamp(1.5rem, 1.15rem + 1.5vw, 2.15rem);
   --text-h3:      1.125rem;
   --text-h4:      1rem;
   --text-body:    1rem;
-  --text-small:   0.875rem; /* legendas, dicas de campo */
+  --text-small:   0.875rem;
 
-  /* Tipografia — altura de linha */
   --leading-tight:  1.2;
   --leading-normal: 1.6;
 
-  /* Espaçamento — escala modular, base 4px (0.25rem) */
-  --space-1: 0.25rem; /*  4px — espaço mínimo entre elementos muito próximos   */
-  --space-2: 0.5rem;  /*  8px — espaçamento interno pequeno (ícone + rótulo)   */
-  --space-3: 0.75rem; /* 12px — espaçamento interno de inputs e botões        */
-  --space-4: 1rem;    /* 16px — espaçamento padrão entre campos               */
-  --space-5: 1.5rem;  /* 24px — espaçamento entre blocos dentro de uma seção  */
-  --space-6: 2rem;    /* 32px — espaçamento entre subseções                   */
-  --space-7: 3rem;    /* 48px — respiro de bloco maior (ex.: entre grades)    */
-  --space-8: 4rem;    /* 64px — respiro vertical entre seções da página       */
+  /* Espaçamento — escala modular, base 4px */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
 
-  /* Forma e transição */
   --radius-sm: 4px;
   --radius-md: 6px;
   --transition-base: 150ms ease;
+
+  /* Grid macro — 12 colunas (ver seção 5) */
+  --grid-columns: 12;
+  --grid-gap: var(--space-5);
+
+  /* Contêiner — largura útil do conteúdo (varia nos breakpoints, seção 6) */
+  --container-max: 1100px;
 }
+
+/*
+  BREAKPOINTS DO PROJETO (documentados aqui; CSS não permite var() dentro
+  de @media, por isso os valores em px são repetidos nas regras da seção 6):
+
+  1)  640px  — smartphones grandes / phablets
+  2)  768px  — tablets em retrato
+  3)  1024px — tablets em paisagem / notebooks
+  4)  1280px — desktops padrão
+  5)  1536px — desktops panorâmicos / telas ultrawide
+*/
 
 /* --------------------------------------------------------------------
    2. RESET BASE
@@ -133,7 +149,7 @@ header, footer {
   color: var(--color-neutral-050);
 }
 .header-inner, .footer-inner {
-  max-width: 1100px;
+  max-width: var(--container-max);
   margin: 0 auto;
   padding: var(--space-5);
   display: flex;
@@ -160,12 +176,11 @@ header nav a[aria-current="page"] {
 }
 
 section {
-  max-width: 1100px;
+  max-width: var(--container-max);
   margin: 0 auto;
   padding: var(--space-8) var(--space-5);
 }
 
-/* Contêiner estreito, usado no cadastro.html (leitura de formulário longo) */
 .pagina-formulario {
   max-width: 760px;
   margin: 0 auto;
@@ -173,12 +188,169 @@ section {
 }
 
 /* --------------------------------------------------------------------
-   5. COMPONENTES
+   5. GRID MACRO (12 colunas) + COMPONENTES
+   --------------------------------------------------------------------
+   Todo bloco de layout bidimensional da plataforma nasce do mesmo
+   sistema: 12 trilhas de largura igual (repeat(12, 1fr)). No mobile
+   (padrão, sem media query), cada item ocupa as 12 colunas — ou seja,
+   a página é lida em uma única coluna. A partir dos breakpoints da
+   seção 6, os itens passam a ocupar frações específicas dessas 12
+   colunas (5/7, 6/6, 4/4/4 etc.), o que dita as áreas macroscópicas
+   do layout em cada faixa de tela.
    -------------------------------------------------------------------- */
 
-/* Botão de ação */
+.hero, .sobre-grade, .contato-grade, .linha,
+.frentes-grade, .vagas-grade, .doacoes-grade, .numeros {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+  gap: var(--grid-gap);
+  align-items: start;
+}
+
+/* Base mobile: cada item ocupa a largura total do grid (12/12) */
+.hero > *, .sobre-grade > *, .contato-grade > *, .linha > *,
+.frentes-grade > *, .vagas-grade > *, .doacoes-grade > *, .numeros > * {
+  grid-column: span 12;
+}
+
+.hero, .contato-grade { align-items: center; }
+.sobre-grade { align-items: center; }
+
+.hero p, .hero-projetos p { color: var(--color-primary-700); }
+
+#atuacao, #frentes, #doacoes { background: var(--color-neutral-050); }
+
+.vagas-grade article, .doacoes-grade article {
+  background: var(--color-neutral-050);
+  border-top: 3px solid var(--color-secondary-600);
+  padding: var(--space-5);
+  border-radius: var(--radius-sm);
+}
+#doacoes .doacoes-grade article { background: var(--color-neutral-000); }
+
+.numeros article { border-top: 3px solid var(--color-secondary-600); padding-top: var(--space-3); }
+.numero {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--color-primary-900);
+  margin: 0;
+}
+
+address { font-style: normal; }
+address p { margin: 0 0 var(--space-4); }
+address strong { display: block; margin-bottom: var(--space-1); font-family: var(--font-display); }
+
+ol.passos { padding-left: var(--space-5); margin-top: var(--space-4); }
+ol.passos li { margin-bottom: var(--space-2); max-width: 60ch; }
+
+details { border-bottom: 1px solid var(--color-line); padding: var(--space-3) 0; }
+details summary { cursor: pointer; font-weight: 500; font-family: var(--font-display); }
+details p { margin: var(--space-2) 0 0; color: var(--color-primary-700); }
+
+/* --------------------------------------------------------------------
+   5b. FLEXBOX — alinhamento microscópico de componentes
+   --------------------------------------------------------------------
+   O Grid (seção 5) resolve ONDE cada bloco fica na página — a área
+   macroscópica. O Flexbox resolve COMO os elementos se alinham
+   dentro de cada bloco, em um único eixo (linha ou coluna): título,
+   texto, lista de detalhes e botão dentro de um cartão; logotipo e
+   navegação dentro do cabeçalho; ícone e rótulo dentro de uma opção
+   de formulário. Os contentores flex do projeto são:
+
+   1) .header-inner / .footer-inner — logotipo à esquerda, navegação
+      à direita, com quebra de linha automática quando o espaço não
+      é suficiente. Propriedades: display:flex; justify-content:
+      space-between; align-items:center; flex-wrap:wrap; gap.
+      (Declaração original na seção 4, mantida ali por contexto.)
+
+   2) nav ul — distribui os links de navegação em linha, com
+      espaçamento uniforme (gap) e quebra automática em telas
+      estreitas. Propriedades: display:flex; flex-wrap:wrap; gap.
+      (Declaração original na seção 4.)
+
+   3) .opcao — alinha o input (rádio/checkbox) com o texto do
+      rótulo pelo topo do eixo transversal, para que rótulos longos
+      que quebram em duas linhas não empurrem o input para o centro.
+      Propriedades: display:flex; align-items:flex-start; gap.
+      (Declaração original nesta seção, junto aos componentes de
+      formulário — ver adiante.)
+
+   4) .hero-texto — empilha título, parágrafo e botão do hero em
+      coluna, com espaçamento consistente via gap, eliminando a
+      dependência de margens individuais que colapsam de forma
+      imprevisível entre elementos de tipos diferentes.
+
+   5) Cartões de projeto/vaga/doação (.frentes-grade article,
+      .vagas-grade article, .doacoes-grade article) — o Grid já
+      garante que todos os cartões de uma mesma linha tenham a
+      MESMA altura (align-items:stretch é o padrão do Grid). O
+      Flexbox então organiza o conteúdo DENTRO de cada cartão já
+      esticado, mantendo título, texto e detalhes alinhados ao topo
+      mesmo quando o texto de um cartão vizinho é mais longo e
+      "excede o espaço original concebido".
+
+   6) .numeros article — empilha o número de impacto e sua legenda
+      em coluna, com espaçamento consistente e altura igual entre
+      os três cartões da linha (herdada do Grid).
+
+   7) .links-inline — distribui os links de redes sociais em linha,
+      com espaçamento uniforme via gap, no lugar de um separador de
+      texto "·" fixo — se um link for adicionado ou removido, o
+      espaçamento se ajusta sozinho.
+
+   8) .botao — mantém o rótulo do botão centralizado nos dois eixos
+      (principal e transversal), preparado para receber um ícone no
+      futuro sem quebrar o alinhamento.
+   -------------------------------------------------------------------- */
+
+.hero-texto {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.frentes-grade article, .vagas-grade article, .doacoes-grade article {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  height: 100%;
+}
+
+.numeros article {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  height: 100%;
+}
+
+.hero-texto > *,
+.frentes-grade article > *, .vagas-grade article > *, .doacoes-grade article > *,
+.numeros article > * {
+  margin: 0;
+}
+
+dl { margin: var(--space-3) 0 0; }
+dt { font-weight: 600; font-size: var(--text-small); color: var(--color-primary-700); margin-top: var(--space-2); }
+dd { margin: var(--space-1) 0 0; }
+
+.links-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+
+table { width: 100%; border-collapse: collapse; margin-top: var(--space-4); background: var(--color-neutral-000); }
+caption { text-align: left; font-weight: 500; margin-bottom: var(--space-2); color: var(--color-primary-700); }
+th, td { text-align: left; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-line); }
+th { font-family: var(--font-display); font-weight: 600; }
+
 .botao {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
   margin-top: var(--space-5);
   padding: var(--space-3) var(--space-5);
   background: var(--color-primary-700);
@@ -194,81 +366,6 @@ section {
 }
 .botao:hover { background: var(--color-primary-900); }
 
-/* Hero (index.html / projetos.html) */
-.hero {
-  display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: var(--space-6);
-  align-items: center;
-}
-.hero p, .hero-projetos p { color: var(--color-primary-700); }
-
-/* Seções com fundo alternado */
-#atuacao, #frentes, #doacoes { background: var(--color-neutral-050); }
-
-/* Grades de conteúdo (sobre, frentes, vagas, doações) */
-.sobre-grade {
-  display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
-  gap: var(--space-6);
-  align-items: center;
-}
-.frentes-grade, .vagas-grade, .doacoes-grade {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-5);
-  margin-top: var(--space-5);
-}
-.vagas-grade article, .doacoes-grade article {
-  background: var(--color-neutral-050);
-  border-top: 3px solid var(--color-secondary-600);
-  padding: var(--space-5);
-  border-radius: var(--radius-sm);
-}
-#doacoes .doacoes-grade article { background: var(--color-neutral-000); }
-
-/* Números de impacto */
-.numeros {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-5);
-  margin-top: var(--space-5);
-}
-.numeros article { border-top: 3px solid var(--color-secondary-600); padding-top: var(--space-3); }
-.numero {
-  font-family: var(--font-display);
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: var(--color-primary-900);
-  margin: 0;
-}
-
-/* Contato / endereço */
-address { font-style: normal; }
-address p { margin: 0 0 var(--space-4); }
-address strong { display: block; margin-bottom: var(--space-1); font-family: var(--font-display); }
-.contato-grade {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-7);
-  margin-top: var(--space-5);
-}
-
-/* Listas ordenadas e FAQ */
-ol.passos { padding-left: var(--space-5); margin-top: var(--space-4); }
-ol.passos li { margin-bottom: var(--space-2); max-width: 60ch; }
-
-details { border-bottom: 1px solid var(--color-line); padding: var(--space-3) 0; }
-details summary { cursor: pointer; font-weight: 500; font-family: var(--font-display); }
-details p { margin: var(--space-2) 0 0; color: var(--color-primary-700); }
-
-/* Tabela de transparência */
-table { width: 100%; border-collapse: collapse; margin-top: var(--space-4); background: var(--color-neutral-000); }
-caption { text-align: left; font-weight: 500; margin-bottom: var(--space-2); color: var(--color-primary-700); }
-th, td { text-align: left; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-line); }
-th { font-family: var(--font-display); font-weight: 600; }
-
-/* Formulários (contato e cadastro) */
 form { margin-top: var(--space-6); }
 
 fieldset {
@@ -281,7 +378,6 @@ legend { padding: 0 var(--space-2); font-size: var(--text-h3); margin: 0; }
 
 .campo { margin-bottom: var(--space-5); }
 .campo:last-child { margin-bottom: 0; }
-.linha { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
 
 label { display: block; font-weight: 500; margin-bottom: var(--space-2); }
 
@@ -295,8 +391,6 @@ input[type="date"], select, textarea {
   font-size: var(--text-body);
   background: var(--color-neutral-000);
 }
-
-/* Realce visual de campo inválido, reforçando a validação nativa (pattern/required) */
 input:invalid:not(:placeholder-shown) { border-color: var(--color-danger-600); }
 
 .opcao { display: flex; align-items: flex-start; gap: var(--space-3); margin-bottom: var(--space-3); }
@@ -304,15 +398,55 @@ input:invalid:not(:placeholder-shown) { border-color: var(--color-danger-600); }
 .opcao label { font-weight: 400; margin-bottom: 0; }
 
 /* --------------------------------------------------------------------
-   6. RESPONSIVIDADE E PREFERÊNCIAS
+   6. BREAKPOINTS RESPONSIVOS (mobile-first, 5 cenários)
    -------------------------------------------------------------------- */
-@media (max-width: 760px) {
-  .hero, .sobre-grade, .contato-grade { grid-template-columns: 1fr; }
-  .frentes-grade, .vagas-grade, .doacoes-grade, .numeros { grid-template-columns: 1fr; }
+
+/* Breakpoint 1 — 640px: smartphones grandes / phablets.
+   Pares curtos (números de impacto, linhas de formulário) já
+   aproveitam a largura extra dividindo o grid em 2 colunas de 6/12. */
+@media (min-width: 640px) {
+  .numeros > *, .linha > * { grid-column: span 6; }
 }
-@media (max-width: 560px) {
-  .linha { grid-template-columns: 1fr; }
+
+/* Breakpoint 2 — 768px: tablets em retrato.
+   Hero e "Quem somos" assumem composição assimétrica texto/imagem;
+   contato divide 6/6; grades de cards passam a 2 colunas (6/12). */
+@media (min-width: 768px) {
+  .hero > *:first-child        { grid-column: span 7; }
+  .hero > *:last-child         { grid-column: span 5; }
+  .sobre-grade > *:first-child { grid-column: span 5; }
+  .sobre-grade > *:last-child  { grid-column: span 7; }
+  .contato-grade > *           { grid-column: span 6; }
+  .frentes-grade > *, .vagas-grade > *, .doacoes-grade > * { grid-column: span 6; }
 }
+
+/* Breakpoint 3 — 1024px: tablets em paisagem / notebooks.
+   As grades de cards completam a divisão pensada para desktop:
+   3 colunas reais (4/12 cada). Aumenta o respiro interno das seções. */
+@media (min-width: 1024px) {
+  .frentes-grade > *, .vagas-grade > *, .doacoes-grade > * { grid-column: span 4; }
+  section { padding: var(--space-8) var(--space-6); }
+}
+
+/* Breakpoint 4 — 1280px: desktops padrão.
+   Aumenta o espaçamento entre colunas e a largura útil do contêiner
+   central, dando mais respiro entre os blocos de conteúdo. */
+@media (min-width: 1280px) {
+  :root { --container-max: 1180px; }
+  .hero, .sobre-grade, .contato-grade,
+  .frentes-grade, .vagas-grade, .doacoes-grade, .numeros {
+    gap: var(--space-6);
+  }
+}
+
+/* Breakpoint 5 — 1536px: desktops panorâmicos / telas ultrawide.
+   Trava a largura máxima do conteúdo (evita linhas de texto e grids
+   esticados demais) e amplia levemente a base tipográfica. */
+@media (min-width: 1536px) {
+  :root { --container-max: 1320px; }
+  body { font-size: 1.0625rem; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 }
