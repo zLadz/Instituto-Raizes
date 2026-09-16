@@ -8,147 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --forest-950: #142118;
-    --forest-700: #24402D;
-    --sand-100: #F2EBDA;
-    --sand-050: #FAF6EC;
-    --gold-600: #B98A2E;
-    --ink-900: #1C1B17;
-    --line: rgba(28, 27, 23, 0.18);
-    --danger: #A23B2E;
-  }
-
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-
-  body {
-    margin: 0;
-    background: var(--sand-100);
-    color: var(--ink-900);
-    font-family: "Work Sans", sans-serif;
-    line-height: 1.6;
-  }
-
-  h1, h2, legend {
-    font-family: "Fraunces", serif;
-    font-weight: 600;
-    line-height: 1.2;
-  }
-  h1 { font-size: clamp(2rem, 4.5vw, 3rem); margin: 0 0 0.4em; }
-  p { max-width: 65ch; }
-
-  a { color: var(--forest-700); }
-  a:focus-visible, button:focus-visible, input:focus-visible,
-  select:focus-visible, textarea:focus-visible {
-    outline: 3px solid var(--gold-600);
-    outline-offset: 2px;
-  }
-
-  .skip-link {
-    position: absolute; left: -999px; top: 0;
-    background: var(--gold-600); color: #fff;
-    padding: 0.6em 1em; z-index: 100;
-  }
-  .skip-link:focus { left: 0.5em; top: 0.5em; }
-
-  header { background: var(--forest-950); color: var(--sand-050); }
-  .header-inner {
-    max-width: 1100px; margin: 0 auto; padding: 1.1em 1.5em;
-    display: flex; justify-content: space-between; align-items: center;
-    gap: 1em; flex-wrap: wrap;
-  }
-  .brand { font-family: "Fraunces", serif; font-size: 1.3rem; margin: 0; }
-  .brand span { color: var(--gold-600); }
-  nav ul { list-style: none; display: flex; gap: 1.6em; margin: 0; padding: 0; }
-  header nav a { color: var(--sand-050); text-decoration: none; font-weight: 500; }
-  header nav a:hover { color: var(--gold-600); }
-  header nav a[aria-current="page"] { color: var(--gold-600); border-bottom: 2px solid var(--gold-600); }
-
-  main { max-width: 760px; margin: 0 auto; padding: 3em 1.5em 5em; }
-
-  form { margin-top: 2em; }
-
-  fieldset {
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 1.4em 1.6em 1.8em;
-    margin: 0 0 1.8em;
-  }
-  legend {
-    padding: 0 0.5em;
-    font-size: 1.15rem;
-  }
-
-  .campo { margin-bottom: 1.2em; }
-  .campo:last-child { margin-bottom: 0; }
-
-  .linha {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.2em;
-  }
-
-  label {
-    display: block;
-    font-weight: 500;
-    margin-bottom: 0.35em;
-  }
-
-  .dica {
-    display: block;
-    font-size: 0.85rem;
-    color: var(--forest-700);
-    margin-top: 0.3em;
-  }
-
-  input[type="text"], input[type="email"], input[type="tel"],
-  input[type="date"], select {
-    width: 100%;
-    padding: 0.65em 0.75em;
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    font-family: inherit;
-    font-size: 1rem;
-    background: #fff;
-  }
-
-  .opcao {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.6em;
-    margin-bottom: 0.7em;
-  }
-  .opcao input { margin-top: 0.3em; }
-  .opcao label { font-weight: 400; margin-bottom: 0; }
-
-  .botao {
-    display: inline-block;
-    padding: 0.8em 1.8em;
-    background: var(--forest-700);
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    font-family: inherit;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-  }
-  .botao:hover { background: var(--forest-950); }
-
-  footer { background: var(--forest-950); color: var(--sand-050); }
-  .footer-inner {
-    max-width: 1100px; margin: 0 auto; padding: 2em 1.5em;
-    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1em;
-  }
-  footer a { color: var(--sand-050); }
-  footer nav ul { list-style: none; display: flex; gap: 1.4em; margin: 0; padding: 0; }
-
-  @media (max-width: 560px) {
-    .linha { grid-template-columns: 1fr; }
-  }
-</style>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
@@ -168,7 +28,7 @@
   </div>
 </header>
 
-<main id="conteudo-principal">
+<main id="conteudo-principal" class="pagina-formulario">
   <h1>Cadastro de voluntário ou doador</h1>
   <p>Preencha seus dados abaixo. Depois do envio, nossa equipe entra em contato para os próximos passos, de acordo com a frente de participação escolhida.</p>
 
