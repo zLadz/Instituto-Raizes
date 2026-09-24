@@ -2,11 +2,11 @@
  * ==========================================================================
  * SPA ROUTER & DOM CONTROLLER — Instituto Raízes
  * ==========================================================================
- * Arquitetura reativa e interativa com manipulação de eventos no DOM:
+ * Arquitetura reativa e interativa com manipulação de eventos e DOM:
  * 1. Mapeamento de rotas e templates das visões (Início, Projetos, Cadastro).
  * 2. Event Delegation para âncoras SPA e elementos dinâmicos (ex: botão Pix).
  * 3. Menu Mobile acessível com eventos de clique e alternância de classes/ARIA.
- * 4. Validação em tempo real e máscaras com eventos 'input' e 'change'.
+ * 4. Rotinas de verificação de consistência e injeção condicional de notificações.
  * 5. Interceptação de submissão 'submit' com preventDefault() e feedback visual.
  * 6. Sincronização com o histórico do navegador (popstate e hashchange).
  * ==========================================================================
@@ -90,11 +90,11 @@ const routes = {
             </p>
           </address>
 
-          <form id="form-contato" aria-label="Formulário de contato">
+          <form id="form-contato" aria-label="Formulário de contato" novalidate>
             <div id="feedback-contato" aria-live="polite"></div>
             <div class="campo">
               <label for="nome">Nome</label>
-              <input type="text" id="nome" name="nome" placeholder="Seu nome" required minlength="2">
+              <input type="text" id="nome" name="nome" placeholder="Seu nome completo" required minlength="3">
             </div>
             <div class="campo">
               <label for="email">E-mail</label>
@@ -373,7 +373,7 @@ const routes = {
 
         <fieldset>
           <legend>Consentimento</legend>
-          <div class="opcao">
+          <div class="opcao" id="container-termos">
             <input type="checkbox" id="termos" name="termos" value="aceito" required>
             <label for="termos">Li e aceito a política de privacidade e o uso dos meus dados para fins de contato</label>
           </div>
@@ -461,7 +461,7 @@ function renderRoute(routeKey, targetHash = '') {
     container.className = targetRoute.className || '';
     currentActiveRoute = routeKey;
 
-    // Inicializa comportamentos, validações e formulários da visão renderizada
+    // Inicializa rotinas de verificação, interatividade e formulários
     initPageInteractions(routeKey);
   }
 
@@ -675,46 +675,142 @@ window.addEventListener('hashchange', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 9. INICIALIZAÇÃO E GANCHOS ESPECÍFICOS DE VISÕES (Eventos 'input', 'change', 'submit')
+// 9. ROTINAS DE CONSISTÊNCIA E VALIDAÇÃO CONDICIONAL DO DOM
+// ---------------------------------------------------------------------------
+
+/**
+ * Avalia critérios de consistência específicos e retorna mensagem amigável de erro
+ */
+function obterMensagemErro(campo) {
+  const v = campo.validity;
+  if (!v || v.valid) return '';
+
+  // 1. Campo obrigatório vazio
+  if (v.valueMissing) {
+    if (campo.type === 'checkbox') return 'É obrigatório aceitar os termos para prosseguir.';
+    if (campo.tagName === 'SELECT') return 'Por favor, selecione uma opção válida.';
+    return 'Este campo é de preenchimento obrigatório.';
+  }
+
+  // 2. Comprimento mínimo
+  if (v.tooShort) {
+    return `Preencha no mínimo ${campo.minLength} caracteres (atual: ${campo.value.length}).`;
+  }
+
+  // 3. Formato sintático de e-mail
+  if (v.typeMismatch && campo.type === 'email') {
+    return 'Digite um endereço de e-mail válido (ex: seu@email.com).';
+  }
+
+  // 4. Regra de negócio: data máxima / idade mínima de 16 anos
+  if (v.rangeOverflow && campo.id === 'nascimento') {
+    return 'Idade mínima não atingida: é necessário ter pelo menos 16 anos.';
+  }
+
+  // 5. Padrões de formato via Regex (Pattern)
+  if (v.patternMismatch) {
+    if (campo.id === 'cpf') return 'O CPF deve ter 11 dígitos no formato 000.000.000-00.';
+    if (campo.id === 'cep') return 'O CEP deve ter 8 dígitos no formato 00000-000.';
+    if (campo.id === 'telefone') return 'Telefone incompleto. Digite com DDD: (11) 91234-5678.';
+    return 'Formato incorreto. Verifique os dados digitados.';
+  }
+
+  return 'Dado inconsistente. Por favor, verifique o campo.';
+}
+
+/**
+ * Aplica a manipulação condicional do DOM: injeta/remove a mensagem e altera estilos
+ */
+function validarCampo(campo) {
+  const containerCampo = campo.closest('.campo') || campo.closest('.opcao') || campo.parentElement;
+  const erroMsg = obterMensagemErro(campo);
+
+  if (erroMsg) {
+    // ESTADO INVÁLIDO: Altera bordas para alerta e injeta notificação
+    campo.classList.add('input-invalido');
+    campo.classList.remove('input-valido');
+    campo.setAttribute('aria-invalid', 'true');
+
+    if (containerCampo) {
+      let spanErro = containerCampo.querySelector('.campo-erro');
+      if (!spanErro) {
+        spanErro = document.createElement('span');
+        spanErro.className = 'campo-erro';
+        spanErro.setAttribute('role', 'alert');
+        containerCampo.appendChild(spanErro);
+      }
+      spanErro.textContent = erroMsg;
+    }
+    return false;
+  } else {
+    // ESTADO VÁLIDO: Altera bordas para sucesso e remove notificação do DOM
+    campo.classList.remove('input-invalido');
+    campo.removeAttribute('aria-invalid');
+
+    if (campo.type === 'checkbox' ? campo.checked : (campo.value && campo.value.trim().length > 0)) {
+      campo.classList.add('input-valido');
+    } else {
+      campo.classList.remove('input-valido');
+    }
+
+    if (containerCampo) {
+      const spanErro = containerCampo.querySelector('.campo-erro');
+      if (spanErro) {
+        spanErro.remove();
+      }
+    }
+    return true;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 10. INICIALIZAÇÃO E GANCHOS ESPECÍFICOS DE VISÕES
 // ---------------------------------------------------------------------------
 function initPageInteractions(routeKey) {
   // A. PÁGINA INICIAL: Formulário de Contato
   if (routeKey === 'index') {
     const formContato = document.getElementById('form-contato');
     if (formContato) {
-      // Evento 'input' para feedback visual em tempo real nos campos
       const inputs = formContato.querySelectorAll('input, textarea');
+
+      // Verificação preventiva em tempo real ('input' e 'blur')
       inputs.forEach(input => {
-        input.addEventListener('input', () => {
-          if (input.checkValidity()) {
-            input.classList.add('input-valido');
-            input.classList.remove('input-invalido');
-          } else {
-            input.classList.remove('input-valido');
-            if (input.value.trim().length > 0) {
-              input.classList.add('input-invalido');
-            }
-          }
-        });
+        input.addEventListener('input', () => validarCampo(input));
+        input.addEventListener('blur', () => validarCampo(input));
       });
 
-      // Evento 'submit' com preventDefault() e injeção de feedback dinâmico
+      // Verificação no ato de submissão ('submit')
       formContato.addEventListener('submit', (e) => {
         e.preventDefault();
-        const feedback = document.getElementById('feedback-contato');
-        if (formContato.checkValidity()) {
-          if (feedback) {
-            feedback.innerHTML = `
-              <div class="msg-feedback">
-                <strong style="color: var(--color-success-600); font-size: 1.05rem;">✓ Mensagem enviada com sucesso!</strong>
-                <p style="margin: 0.35rem 0 0;">Obrigado pelo contato. Nossa equipe retornará em até 48 horas úteis.</p>
-              </div>
-            `;
-            formContato.reset();
-            inputs.forEach(inp => inp.classList.remove('input-valido', 'input-invalido'));
+        let formValido = true;
+        let primeiroInvalido = null;
+
+        inputs.forEach(input => {
+          const valido = validarCampo(input);
+          if (!valido) {
+            formValido = false;
+            if (!primeiroInvalido) primeiroInvalido = input;
           }
-        } else {
-          formContato.reportValidity();
+        });
+
+        if (!formValido) {
+          if (primeiroInvalido) primeiroInvalido.focus();
+          return;
+        }
+
+        const feedback = document.getElementById('feedback-contato');
+        if (feedback) {
+          feedback.innerHTML = `
+            <div class="msg-feedback">
+              <strong style="color: var(--color-success-600); font-size: 1.05rem;">✓ Mensagem enviada com sucesso!</strong>
+              <p style="margin: 0.35rem 0 0;">Obrigado pelo contato. Nossa equipe retornará em até 48 horas úteis.</p>
+            </div>
+          `;
+          formContato.reset();
+          inputs.forEach(inp => {
+            inp.classList.remove('input-valido', 'input-invalido');
+            inp.removeAttribute('aria-invalid');
+          });
         }
       });
     }
@@ -739,11 +835,13 @@ function initPageInteractions(routeKey) {
     }
   }
 
-  // C. PÁGINA DE CADASTRO: Máscaras 'input', reatividade 'change' e submissão 'submit'
+  // C. PÁGINA DE CADASTRO: Máscaras progressivas e validação preventiva
   if (routeKey === 'cadastro') {
     const formCadastro = document.getElementById('form-cadastro');
     if (formCadastro) {
-      // Evento 'input' para formatação progressiva (máscaras) do CPF e CEP
+      const inputs = formCadastro.querySelectorAll('input:not([type="radio"]), select');
+
+      // Máscaras de entrada (CPF e CEP)
       const inputCpf = document.getElementById('cpf');
       if (inputCpf) {
         inputCpf.addEventListener('input', (e) => {
@@ -753,13 +851,6 @@ function initPageInteractions(routeKey) {
           v = v.replace(/(\d{3})(\d)/, '$1.$2');
           v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
           e.target.value = v;
-
-          if (v.length === 14) {
-            inputCpf.classList.add('input-valido');
-            inputCpf.classList.remove('input-invalido');
-          } else {
-            inputCpf.classList.remove('input-valido');
-          }
         });
       }
 
@@ -770,31 +861,16 @@ function initPageInteractions(routeKey) {
           if (v.length > 8) v = v.substring(0, 8);
           v = v.replace(/(\d{5})(\d{1,3})$/, '$1-$2');
           e.target.value = v;
-
-          if (v.length === 9) {
-            inputCep.classList.add('input-valido');
-            inputCep.classList.remove('input-invalido');
-          } else {
-            inputCep.classList.remove('input-valido');
-          }
         });
       }
 
-      // Validação visual genérica no 'input' dos outros campos
-      const outrosInputs = formCadastro.querySelectorAll('input:not(#cpf):not(#cep), select');
-      outrosInputs.forEach(input => {
-        input.addEventListener('input', () => {
-          if (input.checkValidity()) {
-            input.classList.add('input-valido');
-            input.classList.remove('input-invalido');
-          } else if (input.value.trim().length > 0) {
-            input.classList.remove('input-valido');
-            input.classList.add('input-invalido');
-          }
-        });
+      // Verificação preventiva em tempo real ('input' e 'blur')
+      inputs.forEach(input => {
+        input.addEventListener('input', () => validarCampo(input));
+        input.addEventListener('blur', () => validarCampo(input));
       });
 
-      // Evento 'change' nos radios de participação para alteração dinâmica de texto/contexto
+      // Adaptação contextual do rótulo no 'change' dos radios de participação
       const radiosParticipacao = formCadastro.querySelectorAll('input[name="tipo-participacao"]');
       const labelFrente = document.getElementById('label-frente');
       radiosParticipacao.forEach(radio => {
@@ -807,32 +883,63 @@ function initPageInteractions(routeKey) {
           } else {
             labelFrente.textContent = 'Frente de maior interesse (voluntariado e doação)';
           }
-          // Feedback de estilo temporário
           labelFrente.style.color = 'var(--color-secondary-600)';
           setTimeout(() => { labelFrente.style.color = ''; }, 600);
         });
       });
 
-      // Evento 'submit' do cadastro com preventDefault() e renderização de feedback
+      // Verificação no ato de submissão ('submit')
       formCadastro.addEventListener('submit', (e) => {
         e.preventDefault();
-        const feedback = document.getElementById('feedback-cadastro');
-        if (formCadastro.checkValidity()) {
-          if (feedback) {
-            feedback.innerHTML = `
-              <div class="msg-feedback">
-                <h3 style="margin: 0; color: var(--color-success-600); font-size: 1.25rem;">✓ Cadastro realizado com sucesso!</h3>
-                <p style="margin: 0.5rem 0 0;">Agradecemos sua disposição em fortalecer o Instituto Raízes. Em breve entraremos em contato.</p>
-              </div>
-            `;
-            formCadastro.reset();
-            formCadastro.querySelectorAll('.input-valido, .input-invalido').forEach(el => {
-              el.classList.remove('input-valido', 'input-invalido');
-            });
-            window.scrollTo({ top: feedback.offsetTop - 60, behavior: 'smooth' });
+        let formValido = true;
+        let primeiroInvalido = null;
+
+        // Valida campos de texto, data, select e checkbox
+        inputs.forEach(input => {
+          const valido = validarCampo(input);
+          if (!valido) {
+            formValido = false;
+            if (!primeiroInvalido) primeiroInvalido = input;
           }
-        } else {
-          formCadastro.reportValidity();
+        });
+
+        // Valida se ao menos um radio de participação foi marcado
+        const radioChecado = formCadastro.querySelector('input[name="tipo-participacao"]:checked');
+        const grupoRadio = formCadastro.querySelector('.opcao');
+        if (!radioChecado) {
+          formValido = false;
+          if (!primeiroInvalido) primeiroInvalido = formCadastro.querySelector('input[name="tipo-participacao"]');
+          if (grupoRadio && !grupoRadio.parentElement.querySelector('.campo-erro')) {
+            const span = document.createElement('span');
+            span.className = 'campo-erro';
+            span.setAttribute('role', 'alert');
+            span.textContent = 'Selecione como você deseja participar.';
+            grupoRadio.parentElement.appendChild(span);
+          }
+        } else if (grupoRadio && grupoRadio.parentElement.querySelector('.campo-erro')) {
+          grupoRadio.parentElement.querySelector('.campo-erro').remove();
+        }
+
+        if (!formValido) {
+          if (primeiroInvalido) primeiroInvalido.focus();
+          return;
+        }
+
+        // Se consistente, renderiza a notificação de sucesso e rola até ela
+        const feedback = document.getElementById('feedback-cadastro');
+        if (feedback) {
+          feedback.innerHTML = `
+            <div class="msg-feedback">
+              <h3 style="margin: 0; color: var(--color-success-600); font-size: 1.25rem;">✓ Cadastro realizado com sucesso!</h3>
+              <p style="margin: 0.5rem 0 0;">Agradecemos sua disposição em fortalecer o Instituto Raízes. Em breve nossa equipe entrará em contato.</p>
+            </div>
+          `;
+          formCadastro.reset();
+          inputs.forEach(inp => {
+            inp.classList.remove('input-valido', 'input-invalido');
+            inp.removeAttribute('aria-invalid');
+          });
+          window.scrollTo({ top: feedback.offsetTop - 60, behavior: 'smooth' });
         }
       });
     }
@@ -840,7 +947,7 @@ function initPageInteractions(routeKey) {
 }
 
 // ---------------------------------------------------------------------------
-// 10. BOOTSTRAP INICIAL RESILIENTE
+// 11. BOOTSTRAP INICIAL RESILIENTE
 // ---------------------------------------------------------------------------
 function bootstrap() {
   initMenuMobile();
