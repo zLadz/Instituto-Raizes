@@ -2,13 +2,14 @@
  * ==========================================================================
  * SPA ROUTER & DOM CONTROLLER — Instituto Raízes
  * ==========================================================================
- * Arquitetura reativa e interativa com manipulação de eventos e DOM:
+ * Arquitetura reativa, interativa e com retenção de dados local:
  * 1. Mapeamento de rotas e templates das visões (Início, Projetos, Cadastro).
  * 2. Event Delegation para âncoras SPA e elementos dinâmicos (ex: botão Pix).
  * 3. Menu Mobile acessível com eventos de clique e alternância de classes/ARIA.
  * 4. Rotinas de verificação de consistência e injeção condicional de notificações.
- * 5. Interceptação de submissão 'submit' com preventDefault() e feedback visual.
- * 6. Sincronização com o histórico do navegador (popstate e hashchange).
+ * 5. Retenção de dados no cliente via localStorage (JSON.stringify / JSON.parse).
+ * 6. Recuperação e restauração da interface no carregamento inicial da página.
+ * 7. Sincronização com o histórico do navegador (popstate e hashchange).
  * ==========================================================================
  */
 
@@ -256,6 +257,10 @@ const routes = {
       <h1>Cadastro de voluntário ou doador</h1>
       <p>Preencha seus dados abaixo. Depois do envio, nossa equipe entra em contato para os próximos passos, de acordo com a frente de participação escolhida.</p>
 
+      <div id="aviso-rascunho" style="display: none; background: var(--color-neutral-050); border-left: 4px solid var(--color-secondary-600); padding: 0.75rem 1rem; margin-bottom: 1.5rem; font-size: var(--text-small); border-radius: var(--radius-sm);">
+        ℹ️ <strong>Rascunho recuperado:</strong> Seus dados previamente digitados foram restaurados do armazenamento local.
+      </div>
+
       <form id="form-cadastro" action="#" method="post" novalidate>
         <div id="feedback-cadastro" aria-live="polite"></div>
 
@@ -381,6 +386,15 @@ const routes = {
 
         <button type="submit" class="botao">Enviar cadastro</button>
       </form>
+
+      <section id="secao-historico-cadastros" style="margin-top: 3.5rem; border-top: 1px solid var(--color-line); padding-top: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem;">
+          <h2 style="font-size: var(--text-h3); margin-bottom: 0.25rem;">Cadastros salvos no navegador</h2>
+          <button type="button" id="btn-limpar-historico" style="background: none; border: none; color: var(--color-danger-600); cursor: pointer; font-size: var(--text-small); text-decoration: underline;">Limpar histórico</button>
+        </div>
+        <p class="dica" style="margin-bottom: 1.25rem;">Dados retidos localmente (localStorage) para consulta sem necessidade de banco de dados remoto.</p>
+        <div id="historico-cadastros-lista"></div>
+      </section>
     `
   },
 
@@ -461,7 +475,7 @@ function renderRoute(routeKey, targetHash = '') {
     container.className = targetRoute.className || '';
     currentActiveRoute = routeKey;
 
-    // Inicializa rotinas de verificação, interatividade e formulários
+    // Inicializa rotinas de consistência, persistência e interatividade
     initPageInteractions(routeKey);
   }
 
@@ -552,7 +566,7 @@ function fecharMenuMobile() {
 // 6. EVENT DELEGATION GLOBAL (Cliques em Links, Âncoras e Botões Dinâmicos)
 // ---------------------------------------------------------------------------
 document.addEventListener('click', (event) => {
-  // A. GATILHO 1: Botão de cópia de chave Pix (Elemento Gerado Dinamicamente)
+  // A. Botão de cópia de chave Pix (Elemento Gerado Dinamicamente)
   const btnPix = event.target.closest('.btn-copiar-pix');
   if (btnPix) {
     event.preventDefault();
@@ -578,7 +592,7 @@ document.addEventListener('click', (event) => {
     return;
   }
 
-  // B. GATILHO 2: Interceptação de Links e Âncoras de Navegação
+  // B. Interceptação de Links e Âncoras de Navegação
   const anchor = event.target.closest('a');
   if (!anchor) return;
 
@@ -678,36 +692,28 @@ window.addEventListener('hashchange', () => {
 // 9. ROTINAS DE CONSISTÊNCIA E VALIDAÇÃO CONDICIONAL DO DOM
 // ---------------------------------------------------------------------------
 
-/**
- * Avalia critérios de consistência específicos e retorna mensagem amigável de erro
- */
 function obterMensagemErro(campo) {
   const v = campo.validity;
   if (!v || v.valid) return '';
 
-  // 1. Campo obrigatório vazio
   if (v.valueMissing) {
     if (campo.type === 'checkbox') return 'É obrigatório aceitar os termos para prosseguir.';
     if (campo.tagName === 'SELECT') return 'Por favor, selecione uma opção válida.';
     return 'Este campo é de preenchimento obrigatório.';
   }
 
-  // 2. Comprimento mínimo
   if (v.tooShort) {
     return `Preencha no mínimo ${campo.minLength} caracteres (atual: ${campo.value.length}).`;
   }
 
-  // 3. Formato sintático de e-mail
   if (v.typeMismatch && campo.type === 'email') {
     return 'Digite um endereço de e-mail válido (ex: seu@email.com).';
   }
 
-  // 4. Regra de negócio: data máxima / idade mínima de 16 anos
   if (v.rangeOverflow && campo.id === 'nascimento') {
     return 'Idade mínima não atingida: é necessário ter pelo menos 16 anos.';
   }
 
-  // 5. Padrões de formato via Regex (Pattern)
   if (v.patternMismatch) {
     if (campo.id === 'cpf') return 'O CPF deve ter 11 dígitos no formato 000.000.000-00.';
     if (campo.id === 'cep') return 'O CEP deve ter 8 dígitos no formato 00000-000.';
@@ -718,15 +724,11 @@ function obterMensagemErro(campo) {
   return 'Dado inconsistente. Por favor, verifique o campo.';
 }
 
-/**
- * Aplica a manipulação condicional do DOM: injeta/remove a mensagem e altera estilos
- */
 function validarCampo(campo) {
   const containerCampo = campo.closest('.campo') || campo.closest('.opcao') || campo.parentElement;
   const erroMsg = obterMensagemErro(campo);
 
   if (erroMsg) {
-    // ESTADO INVÁLIDO: Altera bordas para alerta e injeta notificação
     campo.classList.add('input-invalido');
     campo.classList.remove('input-valido');
     campo.setAttribute('aria-invalid', 'true');
@@ -743,7 +745,6 @@ function validarCampo(campo) {
     }
     return false;
   } else {
-    // ESTADO VÁLIDO: Altera bordas para sucesso e remove notificação do DOM
     campo.classList.remove('input-invalido');
     campo.removeAttribute('aria-invalid');
 
@@ -764,7 +765,156 @@ function validarCampo(campo) {
 }
 
 // ---------------------------------------------------------------------------
-// 10. INICIALIZAÇÃO E GANCHOS ESPECÍFICOS DE VISÕES
+// 10. ROTINAS DE RETENÇÃO DE DADOS (LOCALSTORAGE: SET, GET, PARSE, RESTORE)
+// ---------------------------------------------------------------------------
+
+const STORAGE_KEYS = {
+  CADASTROS: 'instituto_raizes_cadastros',
+  RASCUNHO: 'instituto_raizes_rascunho_cadastro'
+};
+
+/**
+ * Grava (SET) dados serializados em string JSON
+ */
+function salvarCadastrosLocalStorage(lista) {
+  try {
+    const stringJSON = JSON.stringify(lista);
+    localStorage.setItem(STORAGE_KEYS.CADASTROS, stringJSON);
+  } catch (e) {
+    console.warn('Não foi possível salvar no localStorage:', e);
+  }
+}
+
+/**
+ * Recupera (GET) e desserializa (PARSE) para Array de Objetos JavaScript
+ */
+function obterCadastrosLocalStorage() {
+  try {
+    const stringJSON = localStorage.getItem(STORAGE_KEYS.CADASTROS);
+    if (!stringJSON) return [];
+    const dados = JSON.parse(stringJSON);
+    return Array.isArray(dados) ? dados : [];
+  } catch (e) {
+    console.warn('Erro ao ler do localStorage:', e);
+    return [];
+  }
+}
+
+/**
+ * Renderiza (RESTORE) a interface no DOM a partir dos dados do localStorage
+ */
+function renderizarHistoricoCadastros() {
+  const container = document.getElementById('historico-cadastros-lista');
+  if (!container) return;
+
+  const cadastros = obterCadastrosLocalStorage();
+
+  if (cadastros.length === 0) {
+    container.innerHTML = `
+      <p class="dica" style="font-style: italic;">
+        Nenhum cadastro retido neste navegador até o momento. Preencha o formulário acima para testar a retenção de dados!
+      </p>
+    `;
+    return;
+  }
+
+  // Gera a lista de cartões preenchidos programaticamente
+  container.innerHTML = cadastros.map(c => `
+    <article style="background: var(--color-neutral-000); border: 1px solid var(--color-line); padding: var(--space-4); border-radius: var(--radius-sm); margin-bottom: var(--space-3); border-left: 4px solid var(--color-primary-500);">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+        <strong style="font-size: 1.05rem; color: var(--color-primary-900);">${escapeHtml(c.nome)}</strong>
+        <span class="dica" style="margin: 0;">📅 ${c.dataRegistro}</span>
+      </div>
+      <p style="margin: 0.4rem 0 0; font-size: var(--text-small); color: var(--color-primary-700);">
+        <strong>Frente:</strong> ${escapeHtml(c.frente)} &nbsp;|&nbsp; 
+        <strong>Modalidade:</strong> ${escapeHtml(c.tipoParticipacao)} &nbsp;|&nbsp; 
+        <strong>Local:</strong> ${escapeHtml(c.cidade)}/${escapeHtml(c.estado)}
+      </p>
+      <p style="margin: 0.25rem 0 0; font-size: var(--text-small); color: var(--color-primary-700);">
+        <strong>Contato:</strong> ${escapeHtml(c.email)} · ${escapeHtml(c.telefone)}
+      </p>
+    </article>
+  `).join('');
+}
+
+/**
+ * Auto-save: Salva rascunho de preenchimento em tempo real
+ */
+function salvarRascunhoFormulario(form) {
+  try {
+    const rascunho = {
+      nome: form.nome.value,
+      cpf: form.cpf.value,
+      nascimento: form.nascimento.value,
+      email: form.email.value,
+      telefone: form.telefone.value,
+      cep: form.cep.value,
+      estado: form.estado.value,
+      endereco: form.endereco.value,
+      cidade: form.cidade.value,
+      frente: form.frente.value,
+      tipoParticipacao: form.querySelector('input[name="tipo-participacao"]:checked')?.value || ''
+    };
+    localStorage.setItem(STORAGE_KEYS.RASCUNHO, JSON.stringify(rascunho));
+  } catch (e) {
+    // Silencia em modo anônimo estrito
+  }
+}
+
+/**
+ * Restaura o rascunho do formulário ao abrir a página
+ */
+function restaurarRascunhoFormulario(form) {
+  try {
+    const stringJSON = localStorage.getItem(STORAGE_KEYS.RASCUNHO);
+    if (!stringJSON) return;
+
+    const rascunho = JSON.parse(stringJSON);
+    if (!rascunho) return;
+
+    let temDados = false;
+    for (const campoNome in rascunho) {
+      if (campoNome === 'tipoParticipacao' && rascunho[campoNome]) {
+        const radio = form.querySelector(`input[name="tipo-participacao"][value="${rascunho[campoNome]}"]`);
+        if (radio) {
+          radio.checked = true;
+          temDados = true;
+        }
+      } else if (form[campoNome] && rascunho[campoNome]) {
+        form[campoNome].value = rascunho[campoNome];
+        temDados = true;
+      }
+    }
+
+    if (temDados) {
+      const aviso = document.getElementById('aviso-rascunho');
+      if (aviso) aviso.style.display = 'block';
+    }
+  } catch (e) {
+    console.warn('Erro ao restaurar rascunho:', e);
+  }
+}
+
+function limparRascunhoFormulario() {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.RASCUNHO);
+    const aviso = document.getElementById('aviso-rascunho');
+    if (aviso) aviso.style.display = 'none';
+  } catch (e) {}
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// ---------------------------------------------------------------------------
+// 11. INICIALIZAÇÃO E GANCHOS ESPECÍFICOS DE VISÕES
 // ---------------------------------------------------------------------------
 function initPageInteractions(routeKey) {
   // A. PÁGINA INICIAL: Formulário de Contato
@@ -773,13 +923,11 @@ function initPageInteractions(routeKey) {
     if (formContato) {
       const inputs = formContato.querySelectorAll('input, textarea');
 
-      // Verificação preventiva em tempo real ('input' e 'blur')
       inputs.forEach(input => {
         input.addEventListener('input', () => validarCampo(input));
         input.addEventListener('blur', () => validarCampo(input));
       });
 
-      // Verificação no ato de submissão ('submit')
       formContato.addEventListener('submit', (e) => {
         e.preventDefault();
         let formValido = true;
@@ -835,13 +983,28 @@ function initPageInteractions(routeKey) {
     }
   }
 
-  // C. PÁGINA DE CADASTRO: Máscaras progressivas e validação preventiva
+  // C. PÁGINA DE CADASTRO: Retenção com localStorage, Rascunhos e Validações
   if (routeKey === 'cadastro') {
     const formCadastro = document.getElementById('form-cadastro');
     if (formCadastro) {
       const inputs = formCadastro.querySelectorAll('input:not([type="radio"]), select');
 
-      // Máscaras de entrada (CPF e CEP)
+      // 1. Restaura rascunho anterior e renderiza histórico do localStorage
+      restaurarRascunhoFormulario(formCadastro);
+      renderizarHistoricoCadastros();
+
+      // Botão de limpar histórico de cadastros
+      const btnLimparHistorico = document.getElementById('btn-limpar-historico');
+      if (btnLimparHistorico) {
+        btnLimparHistorico.addEventListener('click', () => {
+          if (confirm('Deseja realmente limpar os cadastros salvos neste navegador?')) {
+            localStorage.removeItem(STORAGE_KEYS.CADASTROS);
+            renderizarHistoricoCadastros();
+          }
+        });
+      }
+
+      // 2. Máscaras de entrada (CPF e CEP)
       const inputCpf = document.getElementById('cpf');
       if (inputCpf) {
         inputCpf.addEventListener('input', (e) => {
@@ -864,17 +1027,21 @@ function initPageInteractions(routeKey) {
         });
       }
 
-      // Verificação preventiva em tempo real ('input' e 'blur')
+      // 3. Validação preventiva e salvamento de rascunho em tempo real
       inputs.forEach(input => {
-        input.addEventListener('input', () => validarCampo(input));
+        input.addEventListener('input', () => {
+          validarCampo(input);
+          salvarRascunhoFormulario(formCadastro);
+        });
         input.addEventListener('blur', () => validarCampo(input));
       });
 
-      // Adaptação contextual do rótulo no 'change' dos radios de participação
+      // 4. Adaptação do rótulo e salvamento de rascunho no 'change' dos radios
       const radiosParticipacao = formCadastro.querySelectorAll('input[name="tipo-participacao"]');
       const labelFrente = document.getElementById('label-frente');
       radiosParticipacao.forEach(radio => {
         radio.addEventListener('change', (e) => {
+          salvarRascunhoFormulario(formCadastro);
           if (!labelFrente) return;
           if (e.target.value === 'doador') {
             labelFrente.textContent = 'Frente que deseja apoiar prioritariamente';
@@ -888,13 +1055,12 @@ function initPageInteractions(routeKey) {
         });
       });
 
-      // Verificação no ato de submissão ('submit')
+      // 5. Submissão do cadastro e gravação (SET) no localStorage
       formCadastro.addEventListener('submit', (e) => {
         e.preventDefault();
         let formValido = true;
         let primeiroInvalido = null;
 
-        // Valida campos de texto, data, select e checkbox
         inputs.forEach(input => {
           const valido = validarCampo(input);
           if (!valido) {
@@ -903,7 +1069,6 @@ function initPageInteractions(routeKey) {
           }
         });
 
-        // Valida se ao menos um radio de participação foi marcado
         const radioChecado = formCadastro.querySelector('input[name="tipo-participacao"]:checked');
         const grupoRadio = formCadastro.querySelector('.opcao');
         if (!radioChecado) {
@@ -925,13 +1090,36 @@ function initPageInteractions(routeKey) {
           return;
         }
 
-        // Se consistente, renderiza a notificação de sucesso e rola até ela
+        // --- RETENÇÃO NO LOCALSTORAGE ---
+        const novoCadastro = {
+          id: Date.now(),
+          dataRegistro: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          nome: formCadastro.nome.value.trim(),
+          email: formCadastro.email.value.trim(),
+          cpf: formCadastro.cpf.value.trim(),
+          telefone: formCadastro.telefone.value.trim() || 'Não informado',
+          nascimento: formCadastro.nascimento.value,
+          estado: formCadastro.estado.value,
+          cidade: formCadastro.cidade.value.trim(),
+          tipoParticipacao: radioChecado.value === 'voluntario' ? 'Voluntário(a)' : (radioChecado.value === 'doador' ? 'Doador(a)' : 'Ambos'),
+          frente: formCadastro.frente.value ? formCadastro.frente.options[formCadastro.frente.selectedIndex].text : 'Geral'
+        };
+
+        // Recupera lista atual (GET + PARSE), adiciona e grava novamente (SET + STRINGIFY)
+        const listaAtual = obterCadastrosLocalStorage();
+        listaAtual.unshift(novoCadastro);
+        salvarCadastrosLocalStorage(listaAtual);
+
+        // Limpa o rascunho
+        limparRascunhoFormulario();
+
+        // Feedback de sucesso e atualização imediata do DOM
         const feedback = document.getElementById('feedback-cadastro');
         if (feedback) {
           feedback.innerHTML = `
             <div class="msg-feedback">
-              <h3 style="margin: 0; color: var(--color-success-600); font-size: 1.25rem;">✓ Cadastro realizado com sucesso!</h3>
-              <p style="margin: 0.5rem 0 0;">Agradecemos sua disposição em fortalecer o Instituto Raízes. Em breve nossa equipe entrará em contato.</p>
+              <h3 style="margin: 0; color: var(--color-success-600); font-size: 1.25rem;">✓ Cadastro gravado com sucesso!</h3>
+              <p style="margin: 0.5rem 0 0;">Os dados de <strong>${escapeHtml(novoCadastro.nome)}</strong> foram persistidos no armazenamento local (localStorage) e adicionados à lista abaixo.</p>
             </div>
           `;
           formCadastro.reset();
@@ -939,6 +1127,10 @@ function initPageInteractions(routeKey) {
             inp.classList.remove('input-valido', 'input-invalido');
             inp.removeAttribute('aria-invalid');
           });
+
+          // Atualiza a visualização da lista no DOM
+          renderizarHistoricoCadastros();
+
           window.scrollTo({ top: feedback.offsetTop - 60, behavior: 'smooth' });
         }
       });
@@ -947,7 +1139,7 @@ function initPageInteractions(routeKey) {
 }
 
 // ---------------------------------------------------------------------------
-// 11. BOOTSTRAP INICIAL RESILIENTE
+// 12. BOOTSTRAP INICIAL RESILIENTE
 // ---------------------------------------------------------------------------
 function bootstrap() {
   initMenuMobile();
