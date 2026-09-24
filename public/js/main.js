@@ -1,0 +1,687 @@
+/**
+ * ==========================================================================
+ * SPA ROUTER & DOM CONTROLLER — Instituto Raízes
+ * ==========================================================================
+ * Implementa a arquitetura de Single Page Application (SPA) em Vanilla JS:
+ * 1. Mapeamento de rotas e templates das visões (Início, Projetos, Cadastro).
+ * 2. Interceptação global de cliques (Event Delegation) e prevenção do reload.
+ * 3. Manipulação dinâmica e programática do DOM no container principal (#conteudo-principal).
+ * 4. Sincronização do histórico compatível tanto com HTTP (History API) quanto file:/// (Hash fallback).
+ * 5. Gerenciamento de acessibilidade (document.title, aria-current="page", foco e rolagem suave).
+ * 6. Ciclo de vida e ganchos (handlers de formulários e formatações).
+ * ==========================================================================
+ */
+
+// ---------------------------------------------------------------------------
+// 1. DEFINIÇÃO DAS ROTAS E TEMPLATES
+// ---------------------------------------------------------------------------
+const routes = {
+  index: {
+    title: 'Instituto Raízes — Reflorestamento e educação ambiental',
+    className: '',
+    navKey: 'index',
+    template: `
+      <section class="hero" aria-labelledby="hero-titulo">
+        <div class="hero-texto">
+          <h1 id="hero-titulo">Recuperar a terra, uma muda de cada vez</h1>
+          <p>Desde 2011, plantamos florestas nativas e formamos comunidades para cuidar da própria água, do próprio solo e do próprio futuro.</p>
+          <a class="botao" href="#contato">Fale com a gente</a>
+        </div>
+        <img
+          src="https://picsum.photos/seed/raizes-plantio/800/600"
+          alt="Voluntários plantando mudas de árvores nativas em uma encosta reflorestada"
+          width="800" height="600" loading="eager">
+      </section>
+
+      <section id="sobre" aria-labelledby="sobre-titulo">
+        <h2 id="sobre-titulo">Quem somos</h2>
+        <div class="sobre-grade">
+          <img
+            src="https://picsum.photos/seed/raizes-equipe/700/560"
+            alt="Equipe do Instituto Raízes reunida em roda durante oficina de educação ambiental"
+            width="700" height="560" loading="lazy">
+          <div class="sobre-texto">
+            <p>O Instituto Raízes é uma organização sem fins lucrativos que atua na Mata Atlântica paulista, recuperando áreas degradadas por meio de plantio de espécies nativas e formação de agentes ambientais comunitários.</p>
+            <p>Hoje somos uma rede de mais de 40 voluntários fixos e parcerias com 12 escolas públicas da região metropolitana de São Paulo.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="atuacao" aria-labelledby="atuacao-titulo">
+        <h2 id="atuacao-titulo">Como atuamos</h2>
+        <p>Três frentes de trabalho sustentam o que fazemos todos os dias.</p>
+        <div class="numeros">
+          <article>
+            <p class="numero">18.400</p>
+            <h3>Mudas nativas plantadas</h3>
+          </article>
+          <article>
+            <p class="numero">12</p>
+            <h3>Escolas parceiras em educação ambiental</h3>
+          </article>
+          <article>
+            <p class="numero">6</p>
+            <h3>Microbacias em recuperação</h3>
+          </article>
+        </div>
+      </section>
+
+      <section id="contato" aria-labelledby="contato-titulo">
+        <h2 id="contato-titulo">Fale com o Instituto Raízes</h2>
+        <div class="contato-grade">
+          <address>
+            <p>
+              <strong>Endereço</strong>
+              Rua das Sementes, 245 — Vila Madalena<br>
+              São Paulo — SP, 05433-000
+            </p>
+            <p>
+              <strong>Telefone</strong>
+              <a href="tel:+551130405060">(11) 3040-5060</a>
+            </p>
+            <p>
+              <strong>E-mail</strong>
+              <a href="mailto:contato@institutoraizes.org.br">contato@institutoraizes.org.br</a>
+            </p>
+            <p>
+              <strong>Redes sociais</strong>
+              <a href="https://instagram.com/institutoraizes">Instagram</a> ·
+              <a href="https://facebook.com/institutoraizes">Facebook</a>
+            </p>
+          </address>
+
+          <form id="form-contato" aria-label="Formulário de contato">
+            <div id="feedback-contato" aria-live="polite"></div>
+            <div>
+              <label for="nome">Nome</label>
+              <input type="text" id="nome" name="nome" required>
+            </div>
+            <div>
+              <label for="email">E-mail</label>
+              <input type="email" id="email" name="email" required>
+            </div>
+            <div>
+              <label for="mensagem">Mensagem</label>
+              <textarea id="mensagem" name="mensagem" rows="4" required></textarea>
+            </div>
+            <button type="submit" class="botao">Enviar mensagem</button>
+          </form>
+        </div>
+      </section>
+    `
+  },
+
+  projetos: {
+    title: 'Projetos, voluntariado e doações — Instituto Raízes',
+    className: '',
+    navKey: 'projetos',
+    template: `
+      <section class="hero-projetos" aria-labelledby="hero-titulo">
+        <h1 id="hero-titulo">Nossas frentes de atuação</h1>
+        <p>Conheça onde investimos nosso trabalho, como você pode se tornar voluntário e de que forma cada doação sustenta esses projetos.</p>
+      </section>
+
+      <section id="frentes" aria-labelledby="frentes-titulo">
+        <h2 id="frentes-titulo">Onde atuamos</h2>
+        <div class="frentes-grade">
+          <article>
+            <img src="https://picsum.photos/seed/raizes-mudas/400/280" alt="Fileiras de mudas nativas em viveiro comunitário" width="400" height="280" loading="lazy">
+            <h3>Reflorestamento</h3>
+            <p>Plantio de espécies nativas em áreas degradadas da Mata Atlântica, com acompanhamento técnico por três anos após o plantio.</p>
+          </article>
+          <article>
+            <img src="https://picsum.photos/seed/raizes-educacao/400/280" alt="Crianças participando de oficina de educação ambiental ao ar livre" width="400" height="280" loading="lazy">
+            <h3>Educação ambiental</h3>
+            <p>Oficinas em escolas públicas sobre solo, água e biodiversidade, formando agentes ambientais mirins.</p>
+          </article>
+          <article>
+            <img src="https://picsum.photos/seed/raizes-agua/400/280" alt="Nascente de rio protegida por vegetação nativa recém-plantada" width="400" height="280" loading="lazy">
+            <h3>Recuperação de microbacias</h3>
+            <p>Proteção de nascentes e matas ciliares para garantir água de qualidade às comunidades vizinhas.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="voluntariado" aria-labelledby="voluntariado-titulo">
+        <h2 id="voluntariado-titulo">Como ser voluntário</h2>
+        <p>Não é preciso experiência prévia — cada frente tem uma trilha de formação própria antes do primeiro mutirão.</p>
+
+        <h3>Frentes de voluntariado</h3>
+        <div class="vagas-grade">
+          <article>
+            <h4>Mutirão de plantio</h4>
+            <p>Apoio direto no plantio e manutenção das mudas.</p>
+            <dl>
+              <dt>Dedicação</dt>
+              <dd>Sábados pela manhã, quinzenal</dd>
+              <dt>Pré-requisitos</dt>
+              <dd>Nenhum</dd>
+            </dl>
+          </article>
+          <article>
+            <h4>Educador ambiental</h4>
+            <p>Conduz oficinas nas escolas parceiras.</p>
+            <dl>
+              <dt>Dedicação</dt>
+              <dd>4h semanais, em horário escolar</dd>
+              <dt>Pré-requisitos</dt>
+              <dd>Formação em licenciatura ou pedagogia</dd>
+            </dl>
+          </article>
+          <article>
+            <h4>Apoio administrativo</h4>
+            <p>Organização de doações, comunicação e captação de recursos.</p>
+            <dl>
+              <dt>Dedicação</dt>
+              <dd>Remoto, carga horária flexível</dd>
+              <dt>Pré-requisitos</dt>
+              <dd>Nenhum</dd>
+            </dl>
+          </article>
+        </div>
+
+        <h3>Como se inscrever</h3>
+        <ol class="passos">
+          <li>Preencha o formulário de interesse na página de contato.</li>
+          <li>Participe de uma roda de acolhimento (online, 40 minutos).</li>
+          <li>Escolha a frente de atuação que combina com sua disponibilidade.</li>
+          <li>Participe do seu primeiro mutirão como experimentação.</li>
+        </ol>
+
+        <h3>Perguntas frequentes</h3>
+        <details>
+          <summary>Preciso de experiência prévia?</summary>
+          <p>Não. Toda formação necessária é oferecida antes do primeiro mutirão.</p>
+        </details>
+        <details>
+          <summary>Qual a idade mínima para participar?</summary>
+          <p>16 anos, acompanhado de responsável até os 18.</p>
+        </details>
+        <details>
+          <summary>Posso participar apenas uma vez?</summary>
+          <p>Sim, mutirões pontuais são bem-vindos, embora a formação de vínculo ajude o projeto a planejar melhor as atividades.</p>
+        </details>
+      </section>
+
+      <section id="doacoes" aria-labelledby="doacoes-titulo">
+        <h2 id="doacoes-titulo">Como funcionam as doações</h2>
+        <p>Publicamos balanço financeiro trimestral e cada doação recorrente recebe um relatório anual de impacto por e-mail.</p>
+
+        <h3>Formas de doação</h3>
+        <div class="doacoes-grade">
+          <article>
+            <h4>Doação única</h4>
+            <p>Contribuição pontual via Pix, cartão ou boleto, sem compromisso de recorrência.</p>
+          </article>
+          <article>
+            <h4>Doação recorrente</h4>
+            <p>Valor mensal fixo, cancelável a qualquer momento, que sustenta o custeio contínuo dos viveiros.</p>
+          </article>
+          <article>
+            <h4>Doação de insumos</h4>
+            <p>Doação de mudas, ferramentas ou material didático diretamente às equipes de campo.</p>
+          </article>
+        </div>
+
+        <h3>Para onde vai cada real</h3>
+        <table>
+          <caption>Destinação média dos recursos arrecadados em 2025</caption>
+          <thead>
+            <tr>
+              <th scope="col">Categoria</th>
+              <th scope="col">Percentual</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Mudas e insumos de plantio</td><td>52%</td></tr>
+            <tr><td>Educação ambiental nas escolas</td><td>26%</td></tr>
+            <tr><td>Manutenção da equipe técnica</td><td>16%</td></tr>
+            <tr><td>Administração e transparência</td><td>6%</td></tr>
+          </tbody>
+        </table>
+
+        <a class="botao" href="#contato">Quero doar agora</a>
+      </section>
+    `
+  },
+
+  cadastro: {
+    title: 'Cadastro de voluntário ou doador — Instituto Raízes',
+    className: 'pagina-formulario',
+    navKey: 'cadastro',
+    template: `
+      <h1>Cadastro de voluntário ou doador</h1>
+      <p>Preencha seus dados abaixo. Depois do envio, nossa equipe entra em contato para os próximos passos, de acordo com a frente de participação escolhida.</p>
+
+      <form id="form-cadastro" action="#" method="post" novalidate>
+        <div id="feedback-cadastro" aria-live="polite"></div>
+
+        <fieldset>
+          <legend>Dados pessoais</legend>
+
+          <div class="campo">
+            <label for="nome">Nome completo</label>
+            <input type="text" id="nome" name="nome" autocomplete="name" minlength="3" required>
+          </div>
+
+          <div class="linha">
+            <div class="campo">
+              <label for="cpf">CPF</label>
+              <input type="text" id="cpf" name="cpf" inputmode="numeric"
+                     pattern="\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}" maxlength="14"
+                     placeholder="000.000.000-00"
+                     title="Digite o CPF no formato 000.000.000-00"
+                     autocomplete="off" aria-describedby="cpf-dica" required>
+              <span class="dica" id="cpf-dica">Formato: 000.000.000-00</span>
+            </div>
+            <div class="campo">
+              <label for="nascimento">Data de nascimento</label>
+              <input type="date" id="nascimento" name="nascimento" autocomplete="bday"
+                     max="2010-09-11" aria-describedby="nascimento-dica" required>
+              <span class="dica" id="nascimento-dica">Idade mínima: 16 anos</span>
+            </div>
+          </div>
+
+          <div class="linha">
+            <div class="campo">
+              <label for="email">E-mail</label>
+              <input type="email" id="email" name="email" autocomplete="email" required>
+            </div>
+            <div class="campo">
+              <label for="telefone">Telefone</label>
+              <input type="tel" id="telefone" name="telefone" inputmode="tel"
+                     pattern="\\(\\d{2}\\) \\d{4,5}-\\d{4}" placeholder="(11) 91234-5678"
+                     title="Digite o telefone no formato (11) 91234-5678"
+                     autocomplete="tel" aria-describedby="telefone-dica">
+              <span class="dica" id="telefone-dica">Formato: (DD) 90000-0000</span>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Endereço</legend>
+
+          <div class="linha">
+            <div class="campo">
+              <label for="cep">CEP</label>
+              <input type="text" id="cep" name="cep" inputmode="numeric"
+                     pattern="\\d{5}-?\\d{3}" placeholder="00000-000"
+                     title="Digite o CEP no formato 00000-000"
+                     autocomplete="postal-code" aria-describedby="cep-dica" required>
+              <span class="dica" id="cep-dica">Formato: 00000-000</span>
+            </div>
+            <div class="campo">
+              <label for="estado">Estado</label>
+              <select id="estado" name="estado" autocomplete="address-level1" required>
+                <option value="">Selecione</option>
+                <option value="SP">São Paulo</option>
+                <option value="RJ">Rio de Janeiro</option>
+                <option value="MG">Minas Gerais</option>
+                <option value="PR">Paraná</option>
+                <option value="SC">Santa Catarina</option>
+                <option value="outro">Outro</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="campo">
+            <label for="endereco">Endereço (rua e número)</label>
+            <input type="text" id="endereco" name="endereco" autocomplete="street-address" required>
+          </div>
+
+          <div class="campo">
+            <label for="cidade">Cidade</label>
+            <input type="text" id="cidade" name="cidade" autocomplete="address-level2" required>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Como você quer participar</legend>
+
+          <div class="opcao">
+            <input type="radio" id="tipo-voluntario" name="tipo-participacao" value="voluntario" required>
+            <label for="tipo-voluntario">Quero ser voluntário(a)</label>
+          </div>
+          <div class="opcao">
+            <input type="radio" id="tipo-doador" name="tipo-participacao" value="doador">
+            <label for="tipo-doador">Quero ser doador(a)</label>
+          </div>
+          <div class="opcao">
+            <input type="radio" id="tipo-ambos" name="tipo-participacao" value="ambos">
+            <label for="tipo-ambos">Quero fazer os dois</label>
+          </div>
+
+          <div class="campo">
+            <label for="frente">Frente de maior interesse</label>
+            <select id="frente" name="frente">
+              <option value="">Selecione (opcional)</option>
+              <option value="reflorestamento">Reflorestamento</option>
+              <option value="educacao">Educação ambiental</option>
+              <option value="microbacias">Recuperação de microbacias</option>
+              <option value="administrativo">Apoio administrativo</option>
+            </select>
+          </div>
+
+          <div class="opcao">
+            <input type="checkbox" id="newsletter" name="newsletter" value="sim">
+            <label for="newsletter">Quero receber novidades do Instituto Raízes por e-mail</label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Consentimento</legend>
+          <div class="opcao">
+            <input type="checkbox" id="termos" name="termos" value="aceito" required>
+            <label for="termos">Li e aceito a política de privacidade e o uso dos meus dados para fins de contato</label>
+          </div>
+        </fieldset>
+
+        <button type="submit" class="botao">Enviar cadastro</button>
+      </form>
+    `
+  },
+
+  404: {
+    title: 'Página Não Encontrada — Instituto Raízes',
+    className: '',
+    navKey: null,
+    template: `
+      <section style="text-align: center; padding: 4rem 1rem;">
+        <h1>404 — Página não encontrada</h1>
+        <p>O conteúdo que você procurou não está disponível ou foi movido.</p>
+        <p style="margin-top: 2rem;">
+          <a class="botao" href="index.html">Voltar para o início</a>
+        </p>
+      </section>
+    `
+  }
+};
+
+// Rota ativa atual em memória
+let currentActiveRoute = null;
+
+// ---------------------------------------------------------------------------
+// 2. RESOLUÇÃO DE ROTAS (URL / HASH -> ROTA INTERNA)
+// ---------------------------------------------------------------------------
+function resolveRouteFromUrl(urlString) {
+  let url;
+  try {
+    url = new URL(urlString, window.location.href);
+  } catch (e) {
+    url = window.location;
+  }
+
+  const rawPath = url.pathname || '';
+  const hash = url.hash || '';
+
+  // 1. Prioriza rotas em formato hash SPA (#/projetos, #/cadastro, #/)
+  if (hash.startsWith('#/')) {
+    const cleanHash = hash.replace('#/', '').split('?')[0].toLowerCase();
+    if (cleanHash === 'projetos') return { key: 'projetos', hash: '' };
+    if (cleanHash === 'cadastro') return { key: 'cadastro', hash: '' };
+    if (cleanHash === '' || cleanHash === 'index' || cleanHash === 'inicio') return { key: 'index', hash: '' };
+  }
+
+  // 2. Se for âncora local que pertence à página inicial (#sobre, #contato)
+  if (hash === '#sobre' || hash === '#contato') {
+    return { key: 'index', hash };
+  }
+
+  // 3. Extrai o nome do arquivo a partir do caminho
+  const filename = rawPath.substring(rawPath.lastIndexOf('/') + 1).toLowerCase();
+
+  if (filename.includes('projetos')) {
+    return { key: 'projetos', hash };
+  }
+  if (filename.includes('cadastro')) {
+    return { key: 'cadastro', hash };
+  }
+  if (filename.includes('index') || filename === '') {
+    return { key: 'index', hash };
+  }
+
+  return { key: 'index', hash: '' };
+}
+
+// ---------------------------------------------------------------------------
+// 3. RENDERIZAÇÃO DO CONTEÚDO E MANIPULAÇÃO DO DOM
+// ---------------------------------------------------------------------------
+function renderRoute(routeKey, targetHash = '') {
+  const container = document.getElementById('conteudo-principal');
+  if (!container) return;
+
+  const targetRoute = routes[routeKey] || routes[404];
+
+  // Injeta o novo conteúdo se for diferente da rota atual
+  if (currentActiveRoute !== routeKey) {
+    container.innerHTML = targetRoute.template;
+    container.className = targetRoute.className || '';
+    currentActiveRoute = routeKey;
+
+    // Inicializa comportamentos e formulários da visão renderizada
+    initPageInteractions(routeKey);
+  }
+
+  // Sincroniza metadados e acessibilidade
+  document.title = targetRoute.title;
+  updateNavAriaCurrent(targetRoute.navKey);
+
+  // Rolagem suave: se houver âncora (#contato, #sobre), rola até o elemento
+  if (targetHash && targetHash !== '#') {
+    setTimeout(() => {
+      const targetElement = document.querySelector(targetHash);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        targetElement.setAttribute('tabindex', '-1');
+        targetElement.focus({ preventScroll: true });
+      }
+    }, 60);
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 4. ATUALIZAÇÃO DO MENU DE NAVEGAÇÃO (aria-current="page")
+// ---------------------------------------------------------------------------
+function updateNavAriaCurrent(navKey) {
+  const navLinks = document.querySelectorAll('header nav a');
+  navLinks.forEach(link => {
+    const href = link.getAttribute('href') || '';
+    let matches = false;
+
+    if (navKey === 'index') {
+      matches = href.includes('index.html') || href === '/' || href.startsWith('#/');
+    } else if (navKey === 'projetos') {
+      matches = href.includes('projetos');
+    } else if (navKey === 'cadastro') {
+      matches = href.includes('cadastro');
+    }
+
+    if (matches && !href.includes('#contato')) {
+      link.setAttribute('aria-current', 'page');
+    } else {
+      link.removeAttribute('aria-current');
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 5. NAVEGAÇÃO PROGRAMÁTICA E INTERCEPTAÇÃO GLOBAL
+// ---------------------------------------------------------------------------
+function navigateTo(targetUrl) {
+  const { key, hash } = resolveRouteFromUrl(targetUrl);
+
+  // 1. Atualiza IMEDIATAMENTE a visão do usuário no DOM
+  renderRoute(key, hash);
+
+  // 2. Atualiza a URL na barra de endereços (com fallback seguro para file:///)
+  try {
+    window.history.pushState({ key, hash }, '', targetUrl);
+  } catch (err) {
+    // Protocolo file:/// no Chrome/Edge lança SecurityError no pushState.
+    // Usamos o hash como fallback seguro e universal:
+    try {
+      const fallbackHash = key === 'index' ? (hash || '#/') : ('#/' + key + (hash || ''));
+      if (window.location.hash !== fallbackHash) {
+        window.location.hash = fallbackHash;
+      }
+    } catch (e) {
+      // Ignora caso restrições extremas impeçam alteração do hash
+    }
+  }
+}
+
+// Intercepta cliques globais (Event Delegation)
+document.addEventListener('click', (event) => {
+  const anchor = event.target.closest('a');
+  if (!anchor) return;
+
+  const href = anchor.getAttribute('href');
+  if (!href) return;
+
+  // Ignora links externos, tel, mailto, etc.
+  if (href.startsWith('http://') ||
+      href.startsWith('https://') ||
+      href.startsWith('mailto:') ||
+      href.startsWith('tel:') ||
+      anchor.hasAttribute('download') ||
+      anchor.getAttribute('target') === '_blank') {
+    return;
+  }
+
+  // Intercepta a navegação SPA nativamente
+  event.preventDefault();
+
+  // Trata âncoras locais (#contato, #sobre, #conteudo-principal)
+  if (href.startsWith('#') && !href.startsWith('#/')) {
+    if (href === '#conteudo-principal') {
+      const mainEl = document.getElementById('conteudo-principal');
+      if (mainEl) {
+        mainEl.scrollIntoView({ behavior: 'smooth' });
+        mainEl.focus({ preventScroll: true });
+      }
+      return;
+    }
+
+    if (currentActiveRoute !== 'index') {
+      navigateTo('index.html' + href);
+    } else {
+      const targetElement = document.querySelector(href);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth' });
+        try {
+          history.pushState(null, '', href);
+        } catch (e) {
+          // Ignora em file:///
+        }
+      }
+    }
+    return;
+  }
+
+  // Navega para o link interno
+  navigateTo(href);
+});
+
+// ---------------------------------------------------------------------------
+// 6. TRATAMENTO DO HISTÓRICO DO NAVEGADOR (popstate e hashchange)
+// ---------------------------------------------------------------------------
+window.addEventListener('popstate', (event) => {
+  if (event.state && event.state.key) {
+    renderRoute(event.state.key, event.state.hash || '');
+  } else {
+    const { key, hash } = resolveRouteFromUrl(window.location.href);
+    renderRoute(key, hash);
+  }
+});
+
+window.addEventListener('hashchange', () => {
+  const { key, hash } = resolveRouteFromUrl(window.location.href);
+  renderRoute(key, hash);
+});
+
+// ---------------------------------------------------------------------------
+// 7. INICIALIZAÇÃO E GANCHOS ESPECÍFICOS DE VISÕES
+// ---------------------------------------------------------------------------
+function initPageInteractions(routeKey) {
+  if (routeKey === 'index') {
+    const formContato = document.getElementById('form-contato');
+    if (formContato) {
+      formContato.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const feedback = document.getElementById('feedback-contato');
+        if (feedback) {
+          feedback.innerHTML = `
+            <div style="background: var(--color-neutral-050); border-left: 4px solid var(--color-success-600); padding: 1rem; margin-bottom: 1.5rem; border-radius: var(--radius-sm);">
+              <strong>Mensagem enviada com sucesso!</strong>
+              <p style="margin: 0.25rem 0 0;">Obrigado pelo contato. Responderemos o mais breve possível.</p>
+            </div>
+          `;
+          formContato.reset();
+        }
+      });
+    }
+  }
+
+  if (routeKey === 'cadastro') {
+    const formCadastro = document.getElementById('form-cadastro');
+    if (formCadastro) {
+      // Formatação progressiva do CPF e CEP
+      const inputCpf = document.getElementById('cpf');
+      if (inputCpf) {
+        inputCpf.addEventListener('input', (e) => {
+          let v = e.target.value.replace(/\D/g, '');
+          if (v.length > 11) v = v.substring(0, 11);
+          v = v.replace(/(\d{3})(\d)/, '$1.$2');
+          v = v.replace(/(\d{3})(\d)/, '$1.$2');
+          v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+          e.target.value = v;
+        });
+      }
+
+      const inputCep = document.getElementById('cep');
+      if (inputCep) {
+        inputCep.addEventListener('input', (e) => {
+          let v = e.target.value.replace(/\D/g, '');
+          if (v.length > 8) v = v.substring(0, 8);
+          v = v.replace(/(\d{5})(\d{1,3})$/, '$1-$2');
+          e.target.value = v;
+        });
+      }
+
+      formCadastro.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const feedback = document.getElementById('feedback-cadastro');
+        if (formCadastro.checkValidity()) {
+          if (feedback) {
+            feedback.innerHTML = `
+              <div style="background: var(--color-neutral-050); border-left: 4px solid var(--color-success-600); padding: 1.25rem; margin-bottom: 2rem; border-radius: var(--radius-sm);">
+                <h3 style="margin: 0; color: var(--color-success-600); font-size: 1.25rem;">Cadastro realizado com sucesso!</h3>
+                <p style="margin: 0.5rem 0 0;">Agradecemos sua disposição em fortalecer o Instituto Raízes. Em breve nossa equipe entrará em contato.</p>
+              </div>
+            `;
+            formCadastro.reset();
+            window.scrollTo({ top: feedback.offsetTop - 50, behavior: 'smooth' });
+          }
+        } else {
+          formCadastro.reportValidity();
+        }
+      });
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 8. BOOTSTRAP INICIAL RESILIENTE
+// ---------------------------------------------------------------------------
+function bootstrap() {
+  const { key, hash } = resolveRouteFromUrl(window.location.href);
+  renderRoute(key, hash);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootstrap);
+} else {
+  bootstrap();
+}

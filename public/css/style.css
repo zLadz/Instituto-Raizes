@@ -158,7 +158,12 @@ header, footer {
   gap: var(--space-4);
   flex-wrap: wrap;
 }
-.footer-inner { align-items: flex-start; }
+.footer-inner {
+  align-items: center;
+}
+.footer-inner p {
+  margin: 0;
+}
 
 .brand { font-family: var(--font-display); font-size: var(--text-h3); margin: 0; }
 .brand span { color: var(--color-secondary-600); }
