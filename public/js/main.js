@@ -2,13 +2,13 @@
  * ==========================================================================
  * SPA ROUTER & DOM CONTROLLER — Instituto Raízes
  * ==========================================================================
- * Implementa a arquitetura de Single Page Application (SPA) em Vanilla JS:
+ * Arquitetura reativa e interativa com manipulação de eventos no DOM:
  * 1. Mapeamento de rotas e templates das visões (Início, Projetos, Cadastro).
- * 2. Interceptação global de cliques (Event Delegation) e prevenção do reload.
- * 3. Manipulação dinâmica e programática do DOM no container principal (#conteudo-principal).
- * 4. Sincronização do histórico compatível tanto com HTTP (History API) quanto file:/// (Hash fallback).
- * 5. Gerenciamento de acessibilidade (document.title, aria-current="page", foco e rolagem suave).
- * 6. Ciclo de vida e ganchos (handlers de formulários e formatações).
+ * 2. Event Delegation para âncoras SPA e elementos dinâmicos (ex: botão Pix).
+ * 3. Menu Mobile acessível com eventos de clique e alternância de classes/ARIA.
+ * 4. Validação em tempo real e máscaras com eventos 'input' e 'change'.
+ * 5. Interceptação de submissão 'submit' com preventDefault() e feedback visual.
+ * 6. Sincronização com o histórico do navegador (popstate e hashchange).
  * ==========================================================================
  */
 
@@ -92,17 +92,17 @@ const routes = {
 
           <form id="form-contato" aria-label="Formulário de contato">
             <div id="feedback-contato" aria-live="polite"></div>
-            <div>
+            <div class="campo">
               <label for="nome">Nome</label>
-              <input type="text" id="nome" name="nome" required>
+              <input type="text" id="nome" name="nome" placeholder="Seu nome" required minlength="2">
             </div>
-            <div>
+            <div class="campo">
               <label for="email">E-mail</label>
-              <input type="email" id="email" name="email" required>
+              <input type="email" id="email" name="email" placeholder="seu@email.com" required>
             </div>
-            <div>
+            <div class="campo">
               <label for="mensagem">Mensagem</label>
-              <textarea id="mensagem" name="mensagem" rows="4" required></textarea>
+              <textarea id="mensagem" name="mensagem" rows="4" placeholder="Como podemos ajudar?" required minlength="5"></textarea>
             </div>
             <button type="submit" class="botao">Enviar mensagem</button>
           </form>
@@ -212,14 +212,17 @@ const routes = {
           <article>
             <h4>Doação única</h4>
             <p>Contribuição pontual via Pix, cartão ou boleto, sem compromisso de recorrência.</p>
+            <button type="button" class="botao btn-copiar-pix" data-pix="contato@institutoraizes.org.br" style="margin-top: 1rem; font-size: var(--text-small);">Copiar Chave Pix</button>
           </article>
           <article>
             <h4>Doação recorrente</h4>
             <p>Valor mensal fixo, cancelável a qualquer momento, que sustenta o custeio contínuo dos viveiros.</p>
+            <a class="botao" href="#contato" style="margin-top: 1rem; font-size: var(--text-small);">Seja Mantenedor</a>
           </article>
           <article>
             <h4>Doação de insumos</h4>
             <p>Doação de mudas, ferramentas ou material didático diretamente às equipes de campo.</p>
+            <a class="botao" href="#contato" style="margin-top: 1rem; font-size: var(--text-small);">Doar Insumos</a>
           </article>
         </div>
 
@@ -261,7 +264,7 @@ const routes = {
 
           <div class="campo">
             <label for="nome">Nome completo</label>
-            <input type="text" id="nome" name="nome" autocomplete="name" minlength="3" required>
+            <input type="text" id="nome" name="nome" autocomplete="name" minlength="3" placeholder="Seu nome completo" required>
           </div>
 
           <div class="linha">
@@ -285,7 +288,7 @@ const routes = {
           <div class="linha">
             <div class="campo">
               <label for="email">E-mail</label>
-              <input type="email" id="email" name="email" autocomplete="email" required>
+              <input type="email" id="email" name="email" autocomplete="email" placeholder="seu@email.com" required>
             </div>
             <div class="campo">
               <label for="telefone">Telefone</label>
@@ -326,12 +329,12 @@ const routes = {
 
           <div class="campo">
             <label for="endereco">Endereço (rua e número)</label>
-            <input type="text" id="endereco" name="endereco" autocomplete="street-address" required>
+            <input type="text" id="endereco" name="endereco" autocomplete="street-address" placeholder="Ex: Rua das Flores, 123" required>
           </div>
 
           <div class="campo">
             <label for="cidade">Cidade</label>
-            <input type="text" id="cidade" name="cidade" autocomplete="address-level2" required>
+            <input type="text" id="cidade" name="cidade" autocomplete="address-level2" placeholder="Sua cidade" required>
           </div>
         </fieldset>
 
@@ -351,8 +354,8 @@ const routes = {
             <label for="tipo-ambos">Quero fazer os dois</label>
           </div>
 
-          <div class="campo">
-            <label for="frente">Frente de maior interesse</label>
+          <div class="campo" id="campo-frente">
+            <label for="frente" id="label-frente">Frente de maior interesse</label>
             <select id="frente" name="frente">
               <option value="">Selecione (opcional)</option>
               <option value="reflorestamento">Reflorestamento</option>
@@ -458,7 +461,7 @@ function renderRoute(routeKey, targetHash = '') {
     container.className = targetRoute.className || '';
     currentActiveRoute = routeKey;
 
-    // Inicializa comportamentos e formulários da visão renderizada
+    // Inicializa comportamentos, validações e formulários da visão renderizada
     initPageInteractions(routeKey);
   }
 
@@ -507,10 +510,13 @@ function updateNavAriaCurrent(navKey) {
 }
 
 // ---------------------------------------------------------------------------
-// 5. NAVEGAÇÃO PROGRAMÁTICA E INTERCEPTAÇÃO GLOBAL
+// 5. NAVEGAÇÃO PROGRAMÁTICA
 // ---------------------------------------------------------------------------
 function navigateTo(targetUrl) {
   const { key, hash } = resolveRouteFromUrl(targetUrl);
+
+  // Fecha o menu mobile se estiver aberto
+  fecharMenuMobile();
 
   // 1. Atualiza IMEDIATAMENTE a visão do usuário no DOM
   renderRoute(key, hash);
@@ -519,28 +525,67 @@ function navigateTo(targetUrl) {
   try {
     window.history.pushState({ key, hash }, '', targetUrl);
   } catch (err) {
-    // Protocolo file:/// no Chrome/Edge lança SecurityError no pushState.
-    // Usamos o hash como fallback seguro e universal:
     try {
       const fallbackHash = key === 'index' ? (hash || '#/') : ('#/' + key + (hash || ''));
       if (window.location.hash !== fallbackHash) {
         window.location.hash = fallbackHash;
       }
     } catch (e) {
-      // Ignora caso restrições extremas impeçam alteração do hash
+      // Silencia restrições locais
     }
   }
 }
 
-// Intercepta cliques globais (Event Delegation)
+function fecharMenuMobile() {
+  const menuPrincipal = document.getElementById('menu-principal');
+  const menuToggle = document.getElementById('menu-toggle');
+  if (menuPrincipal && menuPrincipal.classList.contains('menu-aberto')) {
+    menuPrincipal.classList.remove('menu-aberto');
+    if (menuToggle) {
+      menuToggle.setAttribute('aria-expanded', 'false');
+      menuToggle.textContent = '☰ Menu';
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 6. EVENT DELEGATION GLOBAL (Cliques em Links, Âncoras e Botões Dinâmicos)
+// ---------------------------------------------------------------------------
 document.addEventListener('click', (event) => {
+  // A. GATILHO 1: Botão de cópia de chave Pix (Elemento Gerado Dinamicamente)
+  const btnPix = event.target.closest('.btn-copiar-pix');
+  if (btnPix) {
+    event.preventDefault();
+    const chave = btnPix.getAttribute('data-pix') || 'contato@institutoraizes.org.br';
+
+    const aplicarFeedback = () => {
+      const textoOriginal = btnPix.textContent;
+      btnPix.textContent = '✓ Chave Pix copiada!';
+      btnPix.style.background = 'var(--color-success-600)';
+      setTimeout(() => {
+        btnPix.textContent = textoOriginal;
+        btnPix.style.background = '';
+      }, 2000);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(chave).then(aplicarFeedback).catch(() => {
+        prompt('Copie a chave Pix do Instituto:', chave);
+      });
+    } else {
+      prompt('Copie a chave Pix do Instituto:', chave);
+    }
+    return;
+  }
+
+  // B. GATILHO 2: Interceptação de Links e Âncoras de Navegação
   const anchor = event.target.closest('a');
   if (!anchor) return;
 
   const href = anchor.getAttribute('href');
   if (!href) return;
 
-  // Ignora links externos, tel, mailto, etc.
+  // Ignora links externos, tel, mailto, download ou nova aba
   if (href.startsWith('http://') ||
       href.startsWith('https://') ||
       href.startsWith('mailto:') ||
@@ -555,6 +600,8 @@ document.addEventListener('click', (event) => {
 
   // Trata âncoras locais (#contato, #sobre, #conteudo-principal)
   if (href.startsWith('#') && !href.startsWith('#/')) {
+    fecharMenuMobile();
+
     if (href === '#conteudo-principal') {
       const mainEl = document.getElementById('conteudo-principal');
       if (mainEl) {
@@ -585,7 +632,33 @@ document.addEventListener('click', (event) => {
 });
 
 // ---------------------------------------------------------------------------
-// 6. TRATAMENTO DO HISTÓRICO DO NAVEGADOR (popstate e hashchange)
+// 7. MENU MOBILE HAMBURGUER (EventListener em Botão e Clique Fora)
+// ---------------------------------------------------------------------------
+function initMenuMobile() {
+  const menuToggle = document.getElementById('menu-toggle');
+  const menuPrincipal = document.getElementById('menu-principal');
+  if (!menuToggle || !menuPrincipal) return;
+
+  menuToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const aberto = menuPrincipal.classList.contains('menu-aberto');
+    const novoEstado = !aberto;
+
+    menuToggle.setAttribute('aria-expanded', String(novoEstado));
+    menuPrincipal.classList.toggle('menu-aberto', novoEstado);
+    menuToggle.textContent = novoEstado ? '✕ Fechar' : '☰ Menu';
+  });
+
+  // Fecha o menu ao clicar fora dele
+  document.addEventListener('click', (e) => {
+    if (!menuPrincipal.contains(e.target) && !menuToggle.contains(e.target)) {
+      fecharMenuMobile();
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 8. TRATAMENTO DO HISTÓRICO DO NAVEGADOR (popstate e hashchange)
 // ---------------------------------------------------------------------------
 window.addEventListener('popstate', (event) => {
   if (event.state && event.state.key) {
@@ -602,32 +675,75 @@ window.addEventListener('hashchange', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 7. INICIALIZAÇÃO E GANCHOS ESPECÍFICOS DE VISÕES
+// 9. INICIALIZAÇÃO E GANCHOS ESPECÍFICOS DE VISÕES (Eventos 'input', 'change', 'submit')
 // ---------------------------------------------------------------------------
 function initPageInteractions(routeKey) {
+  // A. PÁGINA INICIAL: Formulário de Contato
   if (routeKey === 'index') {
     const formContato = document.getElementById('form-contato');
     if (formContato) {
+      // Evento 'input' para feedback visual em tempo real nos campos
+      const inputs = formContato.querySelectorAll('input, textarea');
+      inputs.forEach(input => {
+        input.addEventListener('input', () => {
+          if (input.checkValidity()) {
+            input.classList.add('input-valido');
+            input.classList.remove('input-invalido');
+          } else {
+            input.classList.remove('input-valido');
+            if (input.value.trim().length > 0) {
+              input.classList.add('input-invalido');
+            }
+          }
+        });
+      });
+
+      // Evento 'submit' com preventDefault() e injeção de feedback dinâmico
       formContato.addEventListener('submit', (e) => {
         e.preventDefault();
         const feedback = document.getElementById('feedback-contato');
-        if (feedback) {
-          feedback.innerHTML = `
-            <div style="background: var(--color-neutral-050); border-left: 4px solid var(--color-success-600); padding: 1rem; margin-bottom: 1.5rem; border-radius: var(--radius-sm);">
-              <strong>Mensagem enviada com sucesso!</strong>
-              <p style="margin: 0.25rem 0 0;">Obrigado pelo contato. Responderemos o mais breve possível.</p>
-            </div>
-          `;
-          formContato.reset();
+        if (formContato.checkValidity()) {
+          if (feedback) {
+            feedback.innerHTML = `
+              <div class="msg-feedback">
+                <strong style="color: var(--color-success-600); font-size: 1.05rem;">✓ Mensagem enviada com sucesso!</strong>
+                <p style="margin: 0.35rem 0 0;">Obrigado pelo contato. Nossa equipe retornará em até 48 horas úteis.</p>
+              </div>
+            `;
+            formContato.reset();
+            inputs.forEach(inp => inp.classList.remove('input-valido', 'input-invalido'));
+          }
+        } else {
+          formContato.reportValidity();
         }
       });
     }
   }
 
+  // B. PÁGINA DE PROJETOS: Acordeão Exclusivo nas Perguntas Frequentes
+  if (routeKey === 'projetos') {
+    const container = document.getElementById('conteudo-principal');
+    if (container) {
+      const todosDetails = container.querySelectorAll('details');
+      todosDetails.forEach(detalhe => {
+        detalhe.addEventListener('toggle', () => {
+          if (detalhe.open) {
+            todosDetails.forEach(outro => {
+              if (outro !== detalhe && outro.open) {
+                outro.open = false;
+              }
+            });
+          }
+        });
+      });
+    }
+  }
+
+  // C. PÁGINA DE CADASTRO: Máscaras 'input', reatividade 'change' e submissão 'submit'
   if (routeKey === 'cadastro') {
     const formCadastro = document.getElementById('form-cadastro');
     if (formCadastro) {
-      // Formatação progressiva do CPF e CEP
+      // Evento 'input' para formatação progressiva (máscaras) do CPF e CEP
       const inputCpf = document.getElementById('cpf');
       if (inputCpf) {
         inputCpf.addEventListener('input', (e) => {
@@ -637,6 +753,13 @@ function initPageInteractions(routeKey) {
           v = v.replace(/(\d{3})(\d)/, '$1.$2');
           v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
           e.target.value = v;
+
+          if (v.length === 14) {
+            inputCpf.classList.add('input-valido');
+            inputCpf.classList.remove('input-invalido');
+          } else {
+            inputCpf.classList.remove('input-valido');
+          }
         });
       }
 
@@ -647,22 +770,66 @@ function initPageInteractions(routeKey) {
           if (v.length > 8) v = v.substring(0, 8);
           v = v.replace(/(\d{5})(\d{1,3})$/, '$1-$2');
           e.target.value = v;
+
+          if (v.length === 9) {
+            inputCep.classList.add('input-valido');
+            inputCep.classList.remove('input-invalido');
+          } else {
+            inputCep.classList.remove('input-valido');
+          }
         });
       }
 
+      // Validação visual genérica no 'input' dos outros campos
+      const outrosInputs = formCadastro.querySelectorAll('input:not(#cpf):not(#cep), select');
+      outrosInputs.forEach(input => {
+        input.addEventListener('input', () => {
+          if (input.checkValidity()) {
+            input.classList.add('input-valido');
+            input.classList.remove('input-invalido');
+          } else if (input.value.trim().length > 0) {
+            input.classList.remove('input-valido');
+            input.classList.add('input-invalido');
+          }
+        });
+      });
+
+      // Evento 'change' nos radios de participação para alteração dinâmica de texto/contexto
+      const radiosParticipacao = formCadastro.querySelectorAll('input[name="tipo-participacao"]');
+      const labelFrente = document.getElementById('label-frente');
+      radiosParticipacao.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          if (!labelFrente) return;
+          if (e.target.value === 'doador') {
+            labelFrente.textContent = 'Frente que deseja apoiar prioritariamente';
+          } else if (e.target.value === 'voluntario') {
+            labelFrente.textContent = 'Frente de atuação no voluntariado';
+          } else {
+            labelFrente.textContent = 'Frente de maior interesse (voluntariado e doação)';
+          }
+          // Feedback de estilo temporário
+          labelFrente.style.color = 'var(--color-secondary-600)';
+          setTimeout(() => { labelFrente.style.color = ''; }, 600);
+        });
+      });
+
+      // Evento 'submit' do cadastro com preventDefault() e renderização de feedback
       formCadastro.addEventListener('submit', (e) => {
         e.preventDefault();
         const feedback = document.getElementById('feedback-cadastro');
         if (formCadastro.checkValidity()) {
           if (feedback) {
             feedback.innerHTML = `
-              <div style="background: var(--color-neutral-050); border-left: 4px solid var(--color-success-600); padding: 1.25rem; margin-bottom: 2rem; border-radius: var(--radius-sm);">
-                <h3 style="margin: 0; color: var(--color-success-600); font-size: 1.25rem;">Cadastro realizado com sucesso!</h3>
-                <p style="margin: 0.5rem 0 0;">Agradecemos sua disposição em fortalecer o Instituto Raízes. Em breve nossa equipe entrará em contato.</p>
+              <div class="msg-feedback">
+                <h3 style="margin: 0; color: var(--color-success-600); font-size: 1.25rem;">✓ Cadastro realizado com sucesso!</h3>
+                <p style="margin: 0.5rem 0 0;">Agradecemos sua disposição em fortalecer o Instituto Raízes. Em breve entraremos em contato.</p>
               </div>
             `;
             formCadastro.reset();
-            window.scrollTo({ top: feedback.offsetTop - 50, behavior: 'smooth' });
+            formCadastro.querySelectorAll('.input-valido, .input-invalido').forEach(el => {
+              el.classList.remove('input-valido', 'input-invalido');
+            });
+            window.scrollTo({ top: feedback.offsetTop - 60, behavior: 'smooth' });
           }
         } else {
           formCadastro.reportValidity();
@@ -673,9 +840,10 @@ function initPageInteractions(routeKey) {
 }
 
 // ---------------------------------------------------------------------------
-// 8. BOOTSTRAP INICIAL RESILIENTE
+// 10. BOOTSTRAP INICIAL RESILIENTE
 // ---------------------------------------------------------------------------
 function bootstrap() {
+  initMenuMobile();
   const { key, hash } = resolveRouteFromUrl(window.location.href);
   renderRoute(key, hash);
 }
